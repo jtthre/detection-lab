@@ -1,0 +1,40 @@
+title: Écriture d'une valeur dans une clé de démarrage automatique
+id: 96278840-36bf-4479-b427-953d0ea108c4
+status: experimental
+description: |
+  Détecte l'ajout d'une valeur dans les clés Run et RunOnce. Persistance la plus
+  ancienne et toujours la plus utilisée, parce qu'elle ne demande aucun privilège
+  particulier côté utilisateur. Cette règle s'appuie sur l'événement Sysmon 13
+  (modification de valeur de registre) : sans la section RegistryEvent activée dans
+  la configuration Sysmon, elle ne produira jamais rien.
+references:
+    - https://attack.mitre.org/techniques/T1547/001/
+author: Mamadou Lamine Thiore (Junior)
+date: 2026-09-14
+tags:
+    - attack.persistence
+    - attack.t1547.001
+logsource:
+    category: registry_set
+    product: windows
+detection:
+    selection:
+        TargetObject|contains:
+            - '\Software\Microsoft\Windows\CurrentVersion\Run\'
+            - '\Software\Microsoft\Windows\CurrentVersion\RunOnce\'
+            - '\Software\Microsoft\Windows\CurrentVersion\RunServices\'
+    selection_suspicious_path:
+        Details|contains:
+            - '\AppData\'
+            - '\Users\Public\'
+            - '\Windows\Temp\'
+            - 'powershell'
+            - 'cmd.exe /c'
+            - 'rundll32'
+            - 'mshta'
+    condition: all of selection_*
+falsepositives:
+    - Applications installées dans le profil utilisateur (navigateurs, clients de
+      messagerie instantanée) qui s'enregistrent au démarrage depuis AppData.
+    - À affiner — vérifier la signature du binaire pointé par Details.
+level: high

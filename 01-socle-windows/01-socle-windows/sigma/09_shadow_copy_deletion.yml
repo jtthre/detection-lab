@@ -1,0 +1,45 @@
+title: Suppression des clichés instantanés de volume
+id: 55872945-32c9-4441-b14f-9fdad17671e0
+status: experimental
+description: |
+  Détecte les commandes qui détruisent les clichés instantanés, geste quasi
+  systématique juste avant le chiffrement par un rançongiciel — l'objectif étant
+  d'empêcher toute restauration locale. Règle à très faible taux de faux positifs
+  et à valeur opérationnelle maximale : quand elle se déclenche, il reste peu de
+  temps pour réagir.
+references:
+    - https://attack.mitre.org/techniques/T1490/
+author: Mamadou Lamine Thiore (Junior)
+date: 2026-09-14
+tags:
+    - attack.impact
+    - attack.t1490
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_vssadmin:
+        Image|endswith: '\vssadmin.exe'
+        CommandLine|contains|all:
+            - 'delete'
+            - 'shadows'
+    selection_wmic:
+        Image|endswith: '\wmic.exe'
+        CommandLine|contains|all:
+            - 'shadowcopy'
+            - 'delete'
+    selection_bcdedit:
+        Image|endswith: '\bcdedit.exe'
+        CommandLine|contains:
+            - 'recoveryenabled no'
+            - 'ignoreallfailures'
+    selection_wbadmin:
+        Image|endswith: '\wbadmin.exe'
+        CommandLine|contains|all:
+            - 'delete'
+            - 'catalog'
+    condition: 1 of selection_*
+falsepositives:
+    - Opérations de maintenance de sauvegarde documentées et planifiées — si vous en
+      avez, filtrez sur la tâche planifiée parente, pas sur la commande.
+level: critical

@@ -1,0 +1,43 @@
+title: Connexion réseau sortante depuis un binaire système détourné
+id: 34495989-341b-4d40-862c-d8f77d334286
+status: experimental
+description: |
+  Détecte une connexion réseau initiée par un utilitaire Windows qui n'a normalement
+  aucune raison de parler au réseau, ou qui est couramment détourné pour télécharger
+  une charge utile. Repose sur l'événement Sysmon 3, désactivé par défaut : pensez à
+  vérifier que la section NetworkConnect est bien active avant de conclure que la
+  règle ne détecte rien.
+references:
+    - https://attack.mitre.org/techniques/T1105/
+author: Mamadou Lamine Thiore (Junior)
+date: 2026-09-14
+tags:
+    - attack.command-and-control
+    - attack.t1105
+logsource:
+    category: network_connection
+    product: windows
+detection:
+    selection:
+        Initiated: true
+        Image|endswith:
+            - '\mshta.exe'
+            - '\certutil.exe'
+            - '\bitsadmin.exe'
+            - '\regsvr32.exe'
+            - '\wscript.exe'
+            - '\cscript.exe'
+            - '\installutil.exe'
+    filter_internal:
+        DestinationIp|cidr:
+            - '10.0.0.0/8'
+            - '172.16.0.0/12'
+            - '192.168.0.0/16'
+            - '127.0.0.0/8'
+    condition: selection and not filter_internal
+falsepositives:
+    - certutil est utilisé légitimement pour la validation de certificats — vérifier
+      la ligne de commande complète dans l'événement de création de processus associé.
+    - Scripts d'administration internes utilisant cscript ou wscript vers un serveur
+      externe — à filtrer par destination une fois identifiés.
+level: high

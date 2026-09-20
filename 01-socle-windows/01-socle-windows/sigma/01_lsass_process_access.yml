@@ -1,0 +1,39 @@
+title: Accès mémoire suspect au processus LSASS
+id: 3eecbccd-7497-4107-9b9a-eda118bf633d
+status: experimental
+description: |
+  Détecte l'ouverture d'un handle sur lsass.exe avec des droits permettant la lecture
+  de sa mémoire. C'est le geste commun à Mimikatz, procdump, comsvcs.dll et à la
+  plupart des outils de vol d'identifiants : quel que soit l'outil, il faut ce handle.
+  On détecte donc le geste inévitable, pas l'outil.
+references:
+    - https://attack.mitre.org/techniques/T1003/001/
+author: Mamadou Lamine Thiore (Junior)
+date: 2026-09-14
+tags:
+    - attack.credential-access
+    - attack.t1003.001
+logsource:
+    category: process_access
+    product: windows
+detection:
+    selection:
+        TargetImage|endswith: '\lsass.exe'
+        GrantedAccess|contains:
+            - '0x1010'   # PROCESS_VM_READ | PROCESS_QUERY_LIMITED_INFORMATION
+            - '0x1410'
+            - '0x1438'
+            - '0x143a'
+            - '0x1fffff' # PROCESS_ALL_ACCESS
+    filter_legitimate:
+        SourceImage|endswith:
+            - '\wmiprvse.exe'
+            - '\taskmgr.exe'
+            - '\MsMpEng.exe'
+            - '\svchost.exe'
+    condition: selection and not filter_legitimate
+falsepositives:
+    - Outils d'inventaire ou d'EDR non listés dans le filtre — à relever et ajouter
+      au filtre après vérification de la signature du binaire source.
+    - Sauvegarde ou supervision applicative interrogeant les processus système.
+level: high

@@ -1,0 +1,286 @@
+<Sysmon schemaversion="4.90">
+  <!--
+  ============================================================================
+   CONFIGURATION SYSMON - MODULE 01 - SOCLE DE DETECTION WINDOWS
+   Auteur  : Mamadou Lamine Thiore (Junior)
+   Date    : 2026-09-14
+   Cible   : Sysmon v15.22 (publie le 10 septembre 2026)
+
+   OBJECTIF PEDAGOGIQUE
+   Cette configuration n'est pas une configuration de production. Elle est
+   volontairement PERMISSIVE et COURTE pour que chaque bloc reste lisible et
+   que vous puissiez expliquer chaque ligne en entretien. Une configuration de
+   production (SwiftOnSecurity, Olaf Hartong) fait plusieurs milliers de lignes
+   d'exclusions : comparez-les a celle-ci une fois que vous aurez compris
+   la mecanique, c'est l'exercice qui fait progresser.
+
+   PRINCIPE FONDAMENTAL A RETENIR
+   Sysmon par defaut ne journalise presque rien d'utile. Les evenements qui
+   portent l'essentiel de la valeur defensive - connexion reseau (3), thread
+   distant (8), acces processus (10), registre (13), DNS (22) - sont DESACTIVES
+   tant qu'une configuration ne les active pas explicitement.
+   C'est la raison numero un pour laquelle les regles Sigma d'un debutant ne se
+   declenchent jamais : la donnee n'existait pas.
+
+   LOGIQUE DES FILTRES
+   - onmatch="include" : on ne journalise QUE ce qui correspond. Liste blanche.
+   - onmatch="exclude" : on journalise TOUT SAUF ce qui correspond. Liste noire.
+   Une regle include vide ne journalise RIEN.
+   Une regle exclude vide journalise TOUT.
+   Cette distinction est la source d'erreur la plus frequente.
+
+   INSTALLATION
+     sysmon64.exe -accepteula -i sysmon-config.xml
+   MISE A JOUR DE LA CONFIGURATION SANS REINSTALLER
+     sysmon64.exe -c sysmon-config.xml
+   VERIFIER CE QUI EST ACTIF
+     sysmon64.exe -c
+  ============================================================================
+  -->
+
+  <!-- Calcul d'empreintes. SHA256 suffit pour correler avec du renseignement.
+       IMPHASH sert a regrouper des binaires recompilés qui partagent la meme
+       table d'imports : tres utile pour repérer une famille de maliciel. -->
+  <HashAlgorithms>SHA256,IMPHASH</HashAlgorithms>
+
+  <!-- Verifie la revocation des signatures. Cout reseau faible, valeur elevee :
+       un binaire signe avec un certificat revoque est un signal fort. -->
+  <CheckRevocation>True</CheckRevocation>
+
+  <EventFiltering>
+
+    <!--
+    ========================================================================
+     EVENEMENT 1 - CREATION DE PROCESSUS
+     Actif par defaut. C'est la source la plus utilisee : 6 des 10 regles
+     Sigma de ce module s'appuient dessus.
+     On garde TOUT (exclude vide) parce que sur un poste de lab le volume est
+     faible et que filtrer trop tot vous prive de la vision d'ensemble.
+     EN PRODUCTION : il faudrait exclure le bruit connu (antivirus, agents
+     de supervision), sinon le volume devient ingerable.
+    ========================================================================
+    -->
+    <RuleGroup name="Creation de processus" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+        <!-- Rien d'exclu : on journalise toute creation de processus.
+             Exercice : apres 48h de collecte, identifiez les 3 processus les
+             plus bruyants de votre VM et ajoutez-les ici, puis mesurez la
+             reduction de volume. C'est ca, le reglage. -->
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!--
+    ========================================================================
+     EVENEMENT 3 - CONNEXION RESEAU
+     DESACTIVE PAR DEFAUT. Necessaire a la regle 07 (binaire systeme detourne
+     qui sort sur le reseau).
+     Ici on utilise une liste BLANCHE (include) : journaliser toutes les
+     connexions d'un poste Windows est ingerable, on ne garde donc que les
+     processus qui n'ont aucune raison legitime de parler au reseau.
+     C'est l'inverse du bloc precedent - comprendre pourquoi est l'exercice.
+    ========================================================================
+    -->
+    <RuleGroup name="Connexion reseau des binaires detournes" groupRelation="or">
+      <NetworkConnect onmatch="include">
+        <Image condition="end with">\mshta.exe</Image>
+        <Image condition="end with">\certutil.exe</Image>
+        <Image condition="end with">\bitsadmin.exe</Image>
+        <Image condition="end with">\regsvr32.exe</Image>
+        <Image condition="end with">\rundll32.exe</Image>
+        <Image condition="end with">\wscript.exe</Image>
+        <Image condition="end with">\cscript.exe</Image>
+        <Image condition="end with">\powershell.exe</Image>
+        <Image condition="end with">\pwsh.exe</Image>
+        <Image condition="end with">\installutil.exe</Image>
+        <!-- Ports d'administration a distance, quel que soit le processus -->
+        <DestinationPort condition="is">4444</DestinationPort>
+        <DestinationPort condition="is">1080</DestinationPort>
+      </NetworkConnect>
+    </RuleGroup>
+
+    <!--
+    ========================================================================
+     EVENEMENT 7 - CHARGEMENT DE MODULE (DLL)
+     Tres bruyant : un poste charge des milliers de DLL. Liste blanche stricte
+     limitee aux chargements depuis des repertoires inscriptibles par
+     l'utilisateur, qui sont anormaux pour une DLL systeme.
+     Non utilise par les 10 regles de ce module, mais active volontairement :
+     au module 02 vous verrez des tests atomiques qui ne laissent QUE cette
+     trace. C'est l'occasion de constater qu'une donnee collectee "pour rien"
+     devient la seule preuve disponible.
+    ========================================================================
+    -->
+    <RuleGroup name="Chargement de DLL depuis un repertoire utilisateur" groupRelation="or">
+      <ImageLoad onmatch="include">
+        <ImageLoaded condition="contains">\AppData\Local\Temp\</ImageLoaded>
+        <ImageLoaded condition="contains">\Users\Public\</ImageLoaded>
+        <ImageLoaded condition="contains">\Windows\Temp\</ImageLoaded>
+        <ImageLoaded condition="contains">\Downloads\</ImageLoaded>
+      </ImageLoad>
+    </RuleGroup>
+
+    <!--
+    ========================================================================
+     EVENEMENT 8 - CREATION DE THREAD DISTANT
+     DESACTIVE PAR DEFAUT. Necessaire a la regle 05 (injection de code).
+     Volume naturellement faible : on garde tout sauf le bruit systeme connu.
+     Point de cours : l'attaquant peut chiffrer sa charge utile, il ne peut pas
+     eviter de creer le thread. On detecte le geste inevitable, pas l'outil.
+    ========================================================================
+    -->
+    <RuleGroup name="Injection par thread distant" groupRelation="or">
+      <CreateRemoteThread onmatch="exclude">
+        <SourceImage condition="end with">\csrss.exe</SourceImage>
+        <SourceImage condition="end with">\wininit.exe</SourceImage>
+        <SourceImage condition="end with">\services.exe</SourceImage>
+        <SourceImage condition="end with">\MsMpEng.exe</SourceImage>
+      </CreateRemoteThread>
+    </RuleGroup>
+
+    <!--
+    ========================================================================
+     EVENEMENT 10 - ACCES A UN PROCESSUS
+     DESACTIVE PAR DEFAUT. Necessaire a la regle 01 (acces a LSASS).
+     ATTENTION AU VOLUME : sans filtre, cet evenement noie le journal en
+     quelques minutes. On ne garde donc QUE les acces a lsass.exe, qui est la
+     cible qui compte pour le vol d'identifiants.
+     Le champ GrantedAccess porte les droits demandes : c'est lui qui distingue
+     une simple enumeration d'une lecture memoire. Voir la regle 01.
+    ========================================================================
+    -->
+    <RuleGroup name="Acces a la memoire de LSASS" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <TargetImage condition="end with">\lsass.exe</TargetImage>
+      </ProcessAccess>
+    </RuleGroup>
+
+    <!--
+    ========================================================================
+     EVENEMENT 11 - CREATION DE FICHIER
+     Liste blanche sur les emplacements de persistance et les extensions
+     executables deposees dans des repertoires utilisateur.
+     Utile au module 02 pour suivre ce qu'un test atomique depose sur disque.
+    ========================================================================
+    -->
+    <RuleGroup name="Depot de fichier suspect" groupRelation="or">
+      <FileCreate onmatch="include">
+        <TargetFilename condition="contains">\Start Menu\Programs\Startup\</TargetFilename>
+        <TargetFilename condition="contains">\Windows\System32\Tasks\</TargetFilename>
+        <TargetFilename condition="end with">.ps1</TargetFilename>
+        <TargetFilename condition="end with">.bat</TargetFilename>
+        <TargetFilename condition="end with">.hta</TargetFilename>
+        <TargetFilename condition="end with">.lnk</TargetFilename>
+      </FileCreate>
+    </RuleGroup>
+
+    <!--
+    ========================================================================
+     EVENEMENTS 12 / 13 / 14 - REGISTRE
+     DESACTIVES PAR DEFAUT. Necessaires aux regles 04 (cles Run) et 08
+     (creation de service).
+     Le registre complet est ingerable : liste blanche stricte sur les seules
+     ruches de persistance.
+     Note : l'evenement 13 (valeur modifiee) est celui qui porte le champ
+     Details, donc la valeur ecrite. C'est celui qu'exploitent les deux regles.
+    ========================================================================
+    -->
+    <RuleGroup name="Persistance par le registre" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">\CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains">\CurrentVersion\RunOnce</TargetObject>
+        <TargetObject condition="contains">\CurrentVersion\RunServices</TargetObject>
+        <TargetObject condition="contains">\CurrentControlSet\Services\</TargetObject>
+        <TargetObject condition="contains">\Winlogon\Shell</TargetObject>
+        <TargetObject condition="contains">\Winlogon\Userinit</TargetObject>
+        <!-- Desactivation des protections Defender : signal fort -->
+        <TargetObject condition="contains">\Windows Defender\</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+
+    <!--
+    ========================================================================
+     EVENEMENTS 17 / 18 - TUBES NOMMES
+     Beaucoup d'outils de post-exploitation communiquent par tube nomme, avec
+     des noms caracteristiques. Liste blanche sur les motifs connus.
+     Non utilise par les regles de ce module - il servira au module 02.
+    ========================================================================
+    -->
+    <RuleGroup name="Tubes nommes de post-exploitation" groupRelation="or">
+      <PipeEvent onmatch="include">
+        <PipeName condition="contains">\psexec</PipeName>
+        <PipeName condition="contains">\paexec</PipeName>
+        <PipeName condition="contains">\csexec</PipeName>
+        <PipeName condition="contains">\atsvc</PipeName>
+      </PipeEvent>
+    </RuleGroup>
+
+    <!--
+    ========================================================================
+     EVENEMENTS 19 / 20 / 21 - WMI
+     Persistance par abonnement WMI : discrete, sans fichier, survit au
+     redemarrage. Volume quasi nul en fonctionnement normal, donc on garde
+     tout : toute occurrence merite un regard.
+     Complement de la regle 10, qui detecte l'execution declenchee par WMI.
+    ========================================================================
+    -->
+    <RuleGroup name="Persistance par abonnement WMI" groupRelation="or">
+      <WmiEvent onmatch="exclude">
+        <!-- Rien d'exclu : tout evenement WMI est journalise. -->
+      </WmiEvent>
+    </RuleGroup>
+
+    <!--
+    ========================================================================
+     EVENEMENT 22 - REQUETE DNS
+     DESACTIVE PAR DEFAUT. Tres volumineux, mais c'est la source la plus utile
+     pour retrouver a posteriori quel poste a contacte quel domaine.
+     On exclut ici le bruit le plus evident. Au module 03, Zeek fera ce travail
+     au niveau reseau : gardez cette source active pour pouvoir comparer les
+     deux points de vue sur le meme evenement.
+    ========================================================================
+    -->
+    <RuleGroup name="Requetes DNS" groupRelation="or">
+      <DnsQuery onmatch="exclude">
+        <QueryName condition="end with">.microsoft.com</QueryName>
+        <QueryName condition="end with">.windowsupdate.com</QueryName>
+        <QueryName condition="end with">.msftncsi.com</QueryName>
+        <QueryName condition="end with">.in-addr.arpa</QueryName>
+        <QueryName condition="end with">.local</QueryName>
+      </DnsQuery>
+    </RuleGroup>
+
+    <!--
+    ========================================================================
+     EVENEMENT 23 - SUPPRESSION DE FICHIER AVEC ARCHIVAGE
+     Sysmon peut conserver une copie du fichier supprime. Puissant pour la
+     forensique, mais consomme du disque : liste blanche sur les extensions
+     d'execution uniquement.
+     ATTENTION : necessite <ArchiveDirectory> pour archiver reellement. Laisse
+     volontairement de cote ici - activez-le seulement si vous avez la place.
+    ========================================================================
+    -->
+    <RuleGroup name="Effacement de traces" groupRelation="or">
+      <FileDelete onmatch="include">
+        <TargetFilename condition="end with">.ps1</TargetFilename>
+        <TargetFilename condition="end with">.bat</TargetFilename>
+        <TargetFilename condition="end with">.exe</TargetFilename>
+        <TargetFilename condition="end with">.dll</TargetFilename>
+      </FileDelete>
+    </RuleGroup>
+
+    <!--
+    ========================================================================
+     EVENEMENT 25 - ALTERATION DE PROCESSUS
+     Detecte les techniques de creusement de processus (process hollowing) et
+     de remplacement d'image. Volume nul en fonctionnement normal : on garde
+     tout.
+    ========================================================================
+    -->
+    <RuleGroup name="Alteration de processus" groupRelation="or">
+      <ProcessTampering onmatch="exclude">
+        <!-- Rien d'exclu : toute occurrence est anormale. -->
+      </ProcessTampering>
+    </RuleGroup>
+
+  </EventFiltering>
+</Sysmon>

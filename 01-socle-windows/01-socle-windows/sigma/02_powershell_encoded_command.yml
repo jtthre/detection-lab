@@ -1,0 +1,38 @@
+title: PowerShell lancé avec une commande encodée
+id: eb680e02-f4d5-482e-bd22-a7bc7b8dbef3
+status: experimental
+description: |
+  Détecte l'usage du paramètre -EncodedCommand (et ses abréviations valides) qui
+  permet de passer une charge utile en base64. L'encodage n'est pas malveillant en
+  soi, mais il est massivement utilisé pour échapper aux détections par mot-clé :
+  sa présence justifie toujours un coup d'œil.
+references:
+    - https://attack.mitre.org/techniques/T1059/001/
+author: Mamadou Lamine Thiore (Junior)
+date: 2026-09-14
+tags:
+    - attack.execution
+    - attack.t1059.001
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_img:
+        - Image|endswith:
+            - '\powershell.exe'
+            - '\pwsh.exe'
+        - OriginalFileName:
+            - 'PowerShell.EXE'
+            - 'pwsh.dll'
+    selection_flag:
+        CommandLine|contains:
+            - ' -enc '
+            - ' -enco'
+            - ' -encodedcommand'
+            - ' -ec '
+    condition: all of selection_*
+falsepositives:
+    - Outils de déploiement et scripts d'administration qui encodent leurs commandes
+      par commodité — identifier le processus parent pour les distinguer.
+    - Certaines tâches planifiées éditeur utilisent ce paramètre légitimement.
+level: medium

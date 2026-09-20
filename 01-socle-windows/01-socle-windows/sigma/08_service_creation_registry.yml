@@ -1,0 +1,38 @@
+title: Création d'un service Windows pointant vers un chemin suspect
+id: 8fa028b5-750d-478a-8de0-a0f95da5cdf6
+status: experimental
+description: |
+  Détecte l'écriture d'un ImagePath de service dont la cible se trouve dans un
+  répertoire inscriptible ou correspond à un interpréteur. Un service s'exécute en
+  SYSTEM et démarre automatiquement : c'est la persistance privilégiée des outils
+  d'exécution à distance comme PsExec, et de la plupart des rançongiciels.
+references:
+    - https://attack.mitre.org/techniques/T1543/003/
+author: Mamadou Lamine Thiore (Junior)
+date: 2026-09-14
+tags:
+    - attack.persistence
+    - attack.privilege-escalation
+    - attack.t1543.003
+logsource:
+    category: registry_set
+    product: windows
+detection:
+    selection:
+        TargetObject|contains: '\System\CurrentControlSet\Services\'
+        TargetObject|endswith: '\ImagePath'
+    selection_target:
+        Details|contains:
+            - '\Users\'
+            - '\AppData\'
+            - '\Windows\Temp\'
+            - '\ProgramData\'
+            - 'powershell'
+            - 'cmd.exe'
+            - 'rundll32'
+    condition: all of selection_*
+falsepositives:
+    - Certains logiciels installent légitimement un service depuis ProgramData —
+      c'est le cas le plus fréquent, à filtrer nommément après vérification.
+    - Outils de prise en main à distance utilisés par votre support informatique.
+level: high

@@ -1,0 +1,40 @@
+title: Création d'un thread distant vers un processus système
+id: ef2b5370-fb98-4ae7-9a1a-59b3d38666a7
+status: experimental
+description: |
+  Détecte la création d'un thread dans un autre processus, technique de base de
+  l'injection de code. L'intérêt défensif est qu'il s'agit d'un appel système
+  observable : l'attaquant peut chiffrer sa charge utile, il ne peut pas éviter de
+  créer le thread. Événement Sysmon 8, désactivé par défaut — d'où la configuration
+  fournie avec ce module.
+references:
+    - https://attack.mitre.org/techniques/T1055/
+author: Mamadou Lamine Thiore (Junior)
+date: 2026-09-14
+tags:
+    - attack.defense-evasion
+    - attack.privilege-escalation
+    - attack.t1055
+logsource:
+    category: create_remote_thread
+    product: windows
+detection:
+    selection:
+        TargetImage|endswith:
+            - '\explorer.exe'
+            - '\svchost.exe'
+            - '\lsass.exe'
+            - '\winlogon.exe'
+            - '\notepad.exe'
+            - '\spoolsv.exe'
+    filter_known_good:
+        SourceImage|endswith:
+            - '\MsMpEng.exe'
+            - '\csrss.exe'
+            - '\wininit.exe'
+    condition: selection and not filter_known_good
+falsepositives:
+    - Certains produits de sécurité et outils de débogage injectent légitimement.
+    - Le filtre fourni est volontairement court — complétez-le à partir de ce que
+      vous observez réellement sur votre parc, et documentez chaque ajout.
+level: high

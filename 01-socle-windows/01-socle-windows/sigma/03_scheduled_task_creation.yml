@@ -1,0 +1,37 @@
+title: Création d'une tâche planifiée en ligne de commande
+id: b8c04658-f1d8-49f5-98b7-cf3fd04c5996
+status: experimental
+description: |
+  Détecte la création d'une tâche planifiée via schtasks.exe. C'est un mécanisme de
+  persistance de premier choix : il survit au redémarrage, s'exécute sous un compte
+  choisi, et se fond dans l'administration légitime. Le volume est faible sur un
+  poste utilisateur, ce qui rend la règle exploitable ; sur un serveur, il faudra
+  filtrer par compte.
+references:
+    - https://attack.mitre.org/techniques/T1053/005/
+author: Mamadou Lamine Thiore (Junior)
+date: 2026-09-14
+tags:
+    - attack.persistence
+    - attack.privilege-escalation
+    - attack.t1053.005
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection:
+        - Image|endswith: '\schtasks.exe'
+        - OriginalFileName: 'schtasks.exe'
+    selection_create:
+        CommandLine|contains:
+            - ' /create'
+            - ' -create'
+    filter_system_account:
+        User|contains:
+            - 'AUTORITE NT\Système'
+            - 'AUTHORITY\SYSTEM'
+    condition: all of selection_* and not filter_system_account
+falsepositives:
+    - Scripts d'installation logicielle créant leurs propres tâches de mise à jour.
+    - Outils de déploiement de parc — à filtrer par processus parent une fois identifiés.
+level: medium

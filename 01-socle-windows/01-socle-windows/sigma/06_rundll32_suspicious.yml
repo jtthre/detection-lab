@@ -1,0 +1,42 @@
+title: Rundll32 exécuté sans DLL ou depuis un répertoire utilisateur
+id: 07dcc74e-039e-4727-9043-401ff486c276
+status: experimental
+description: |
+  Détecte deux usages détournés de rundll32.exe : l'exécution sans argument de DLL
+  (signature classique d'une injection ultérieure) et le chargement d'une DLL depuis
+  un répertoire inscriptible par l'utilisateur. Rundll32 est un binaire signé
+  Microsoft : l'attaquant s'en sert pour faire exécuter son code par un processus
+  de confiance.
+references:
+    - https://attack.mitre.org/techniques/T1218/011/
+author: Mamadou Lamine Thiore (Junior)
+date: 2026-09-14
+tags:
+    - attack.defense-evasion
+    - attack.t1218.011
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_img:
+        - Image|endswith: '\rundll32.exe'
+        - OriginalFileName: 'RUNDLL32.EXE'
+    selection_no_dll:
+        CommandLine|endswith:
+            - 'rundll32.exe'
+            - 'rundll32'
+            - 'rundll32.exe"'
+    selection_user_path:
+        CommandLine|contains:
+            - '\AppData\Local\Temp\'
+            - '\Users\Public\'
+            - '\Downloads\'
+            - 'javascript:'
+            - 'C:\Windows\Temp\'
+    condition: selection_img and (selection_no_dll or selection_user_path)
+falsepositives:
+    - Installeurs logiciels qui déposent et chargent une DLL depuis un répertoire
+      temporaire pendant l'installation.
+    - Vérifier le processus parent — un parent Explorer après un téléchargement est
+      un signal bien plus fort qu'un parent msiexec.
+level: high
