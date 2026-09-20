@@ -9,7 +9,7 @@ d'autre sans improviser.
 
 **Auteur :** Mamadou Lamine Thiore
 **Période :** 14 au 20 septembre 2026
-**Statut :** socle opérationnel, mesures validées
+**Statut :** socle opérationnel, mesures validées, `sigma check` propre
 
 ---
 
@@ -267,24 +267,53 @@ Correction par renommage, pour que chaque bloc entre dans le motif :
 > **Leçon générale :** un validateur qui signale un bloc orphelin signale une règle dont
 > la logique est amputée. Gravité HIGH méritée.
 
-### 6.2 Étiquette ATT&CK invalide — en cours
+### 6.2 Étiquette ATT&CK invalide — corrigé, et la cause vaut d'être connue
 
 Règles 05 et 06, étiquette `attack.defense-evasion`.
 
-Le validateur compare l'étiquette à la liste des `x_mitre_shortname` téléchargée depuis
-MITRE, lesquels sont **écrits avec des tirets**. Les quatre autres tactiques employées
-dans le dépôt — `credential-access`, `privilege-escalation`, `lateral-movement`,
-`command-and-control` — passent sans erreur, ce qui confirme la forme.
+Les quatre autres tactiques employées — `credential-access`, `privilege-escalation`,
+`lateral-movement`, `command-and-control` — passaient sans erreur. Seule
+`defense-evasion` était rejetée, ce qui excluait un problème de format.
 
-**Le cas de `defense-evasion` reste à élucider.** Commande qui tranche, en affichant la
-liste exacte acceptée par la version installée :
+La liste exacte acceptée par l'outil a tranché :
 
 ```powershell
 python -c "from sigma.data.mitre_attack import mitre_attack_tactics; print(sorted(mitre_attack_tactics.values()))"
 ```
 
-Anomalie de gravité MEDIUM : elle n'empêche ni la conversion ni le déclenchement, mais
-bloquerait une contribution à SigmaHQ.
+```
+['collection', 'command-and-control', 'credential-access', 'defense-impairment',
+ 'discovery', 'execution', 'exfiltration', 'impact', 'initial-access',
+ 'lateral-movement', 'persistence', 'privilege-escalation', 'reconnaissance',
+ 'resource-development', 'stealth']
+```
+
+**`defense-evasion` n'existe plus.** MITRE ATT&CK v19, publiée le 28 avril 2026, a scindé
+la tactique Defense Evasion (TA0005) en deux :
+
+| Nouvelle tactique | Portée |
+|---|---|
+| **`stealth`** | L'adversaire réduit sa visibilité ou rend son activité indistinguable du légitime. Les défenses fonctionnent encore ; il s'y fond. |
+| **`defense-impairment`** | L'adversaire dégrade activement les contrôles de sécurité. Il ne se cache pas, il casse. |
+
+Nos deux règles relèvent de la première. La règle 05 détecte une injection de thread —
+exécuter son code à l'intérieur d'un processus de confiance. La règle 06 détecte un
+détournement de `rundll32.exe`, binaire signé Microsoft. Dans les deux cas, il s'agit de
+se fondre, pas de désactiver quoi que ce soit.
+
+Correction appliquée : `attack.defense-evasion` → `attack.stealth` sur les règles 05 et 06.
+
+Vérification indépendante possible via la correspondance technique → tactique publiée par
+MITRE :
+
+```powershell
+python -c "from sigma.data.mitre_attack import mitre_attack_techniques_tactics_mapping as m; print('T1055', m.get('T1055')); print('T1218.011', m.get('T1218.011'))"
+```
+
+> **Ce que cet incident enseigne.** Le référentiel ATT&CK évolue, et une règle écrite six
+> mois plus tôt peut devenir non conforme sans qu'une ligne en ait bougé. C'est l'argument
+> en faveur de la détection gérée comme du code : sans `sigma check` dans la chaîne, cette
+> dérive serait passée inaperçue jusqu'au refus d'une contribution.
 
 ---
 
@@ -297,7 +326,7 @@ bloquerait une contribution à SigmaHQ.
 | Événements 1, 10, 13, 22, 23 actifs | vérifié par relevé |
 | 10 règles Sigma, 0 erreur de syntaxe | vérifié |
 | Blocs orphelins corrigés | fait |
-| Étiquette `defense-evasion` | à trancher |
+| Étiquette `defense-evasion` | corrigé — ATT&CK v19 l'a remplacée par `stealth` |
 | Preuves horodatées au dépôt | fait, dossier `preuves/` |
 
 ---
