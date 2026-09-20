@@ -18,7 +18,7 @@ logsource:
     category: registry_set
     product: windows
 detection:
-    selection:
+    selection_key:
         TargetObject|contains:
             - '\Software\Microsoft\Windows\CurrentVersion\Run\'
             - '\Software\Microsoft\Windows\CurrentVersion\RunOnce\'

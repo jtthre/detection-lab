@@ -18,7 +18,7 @@ logsource:
     category: registry_set
     product: windows
 detection:
-    selection:
+    selection_path:
         TargetObject|contains: '\System\CurrentControlSet\Services\'
         TargetObject|endswith: '\ImagePath'
     selection_target:
