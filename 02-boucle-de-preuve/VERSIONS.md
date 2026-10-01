@@ -13,8 +13,30 @@ numéro trouvé dans une documentation : prenez celui que votre binaire affiche.
 | Schéma Sysmon | `sysmon -c` (schemaversion) | 4.91 | |
 | sigma-cli | `sigma version` | | |
 | Atomic Red Team | `Get-Module Invoke-AtomicRedTeam` | | |
-| Hayabusa | `hayabusa.exe --version` | | |
+| Hayabusa | `hayabusa.exe help` (bandeau) | **4.1.0 — Suzumushi** | 01/10/2026 |
 | Chainsaw | `chainsaw.exe --version` | | |
+
+## Dérives d'options rencontrées
+
+Le tableau ci-dessus donne les versions ; celui-ci donne ce qu'elles ont cassé. C'est lui
+qu'on relit quand un script cesse de fonctionner après une mise à jour.
+
+| Outil | Version | Ce qui a changé | Conséquence |
+|---|---|---|---|
+| Hayabusa | 4.1.0 | `--version` n'est plus une option globale — l'outil attend une commande | `hayabusa.exe help` affiche le bandeau de version |
+| Hayabusa | 4.1.0 | La commande **`csv-timeline` a été renommée `dfir-timeline`** | `Invoke-Analyse.ps1` corrigé le 01/10/2026 |
+| Hayabusa | 4.1.0 | Refuse d'écraser un fichier de sortie existant | `--clobber` ajouté, sinon la 2ᵉ campagne échoue |
+
+**L'archive compte autant que la version.** Les deux outils publient des archives
+multi-plateformes : `hayabusa-4.1.0-all-platforms.zip` contient cinq binaires (Linux, macOS,
+Windows arm64/x64/x86) et Chainsaw publie un fichier par cible plus un bundle
+`all_platforms+rules+examples`. Un renommage au joker attrape le premier par ordre
+alphabétique — en l'occurrence `win-arm64`, qui ne démarre pas sur un hôte x64. **On nomme
+l'architecture explicitement, jamais `hayabusa*.exe`.**
+
+Les mappings de Chainsaw ne sont livrés que dans le bundle `all_platforms+rules+examples` :
+l'archive par plateforme ne contient que l'exécutable. Sans mapping, aucune règle ne remonte
+— et l'outil ne signale rien.
 
 ## Pourquoi je ne fige pas les numéros ici
 

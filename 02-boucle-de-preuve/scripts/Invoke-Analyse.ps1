@@ -34,20 +34,30 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 # =============================================================================
-#  LA SEULE PARTIE DE CE SCRIPT QUI DEPEND DE VOS VERSIONS
+#  CHEMINS DE L'OUTILLAGE
 #
-#  Hayabusa et Chainsaw changent regulierement le nom de leurs options.
-#  Avant la premiere campagne, lancez :
-#      hayabusa.exe --help
+#  Trois chemins, et c'est tout. Le fichier de mapping de Chainsaw n'est plus
+#  code en dur : il est detecte au lancement, parce que son nom change d'une
+#  version a l'autre et qu'un mapping errone ne provoque pas d'erreur — il
+#  provoque une regle muette, ce qui est bien pire.
+# =============================================================================
+$CheminHayabusa      = 'C:\Lab\outils\hayabusa\hayabusa.exe'
+$CheminChainsaw      = 'C:\Lab\outils\chainsaw\chainsaw.exe'
+$ReglesSigma         = 'C:\Lab\detection-lab\01-socle-windows\sigma'
+$DossierMappings     = 'C:\Lab\outils\chainsaw\mappings'
+# =============================================================================
+#
+#  Versions validees le 01/10/2026 :
+#    Hayabusa 4.1.0 (Suzumushi) — la commande s'appelle "dfir-timeline".
+#        Elle s'appelait "csv-timeline" jusqu'en v3. Si une version ulterieure
+#        la renomme encore, c'est ICI que ca se corrige.
+#    Chainsaw 2.x  — sous-commande "hunt".
+#
+#  Verification avant une campagne sur une nouvelle version :
+#      hayabusa.exe help dfir-timeline
 #      chainsaw.exe hunt --help
-#  et corrigez les quatre variables ci-dessous si besoin. Ensuite vous n'y
-#  touchez plus. Notez la version retenue dans VERSIONS.md.
 # =============================================================================
-$CheminHayabusa   = 'C:\Lab\outils\hayabusa\hayabusa.exe'
-$CheminChainsaw   = 'C:\Lab\outils\chainsaw\chainsaw.exe'
-$RegleschainsawSigma = 'C:\Lab\detection-lab\01-socle-windows\sigma'
-$MappingChainsaw  = 'C:\Lab\outils\chainsaw\mappings\sigma-event-logs-all.yml'
-# =============================================================================
+$CommandeHayabusa = 'dfir-timeline'
 
 $racine   = Split-Path -Parent $PSScriptRoot
 $rapports = Join-Path $racine 'rapports'
@@ -56,6 +66,26 @@ if (-not (Test-Path $rapports)) { New-Item -ItemType Directory -Path $rapports |
 if (-not (Test-Path $Evtx)) { throw "EVTX introuvable : $Evtx" }
 $Evtx = (Resolve-Path $Evtx).Path
 
+# --- Detection du mapping Chainsaw ---------------------------------------------
+# La couche de traduction : elle dit comment les champs Sigma correspondent aux
+# champs du journal Windows. Un mapping absent ou inadapte ne leve aucune erreur,
+# il rend simplement toutes vos regles muettes. On le resout explicitement, et on
+# affiche celui qui a ete retenu — pour qu'il figure dans la trace de la campagne.
+$MappingChainsaw = $null
+if (Test-Path $DossierMappings) {
+    $candidats = @(
+        Get-ChildItem -Path $DossierMappings -Filter '*.yml' -ErrorAction SilentlyContinue |
+            Sort-Object -Property @{ Expression = {
+                # On privilegie le mapping le plus large, celui qui couvre tous
+                # les journaux, puis tout mapping dont le nom mentionne sigma.
+                if ($_.Name -like 'sigma-event-logs-all*') { 0 }
+                elseif ($_.Name -like 'sigma*')            { 1 }
+                else                                        { 2 }
+            }}, Name
+    )
+    if ($candidats.Count -gt 0) { $MappingChainsaw = $candidats[0].FullName }
+}
+
 $horodatage = Get-Date -Format 'yyyy-MM-dd_HHmmss'
 $base       = Join-Path $rapports "${horodatage}_${Etiquette}"
 
@@ -63,6 +93,7 @@ $bilan = [ordered]@{
     Evtx          = $Evtx
     Etiquette     = $Etiquette
     Horodatage    = $horodatage
+    MappingUtilise = $MappingChainsaw
     Chainsaw      = 'non execute'
     Hayabusa      = 'non execute'
     SortieChainsaw = $null
@@ -70,7 +101,18 @@ $bilan = [ordered]@{
 }
 
 # --- Chainsaw : vos règles ------------------------------------------------------
-if (Test-Path $CheminChainsaw) {
+if (-not $MappingChainsaw) {
+    # On refuse de lancer Chainsaw sans mapping explicite. Sans lui, l'outil ne
+    # remonterait rien et on conclurait a tort que les regles sont mauvaises.
+    $bilan.Chainsaw = "ECHEC : aucun mapping trouve dans $DossierMappings"
+    Write-Warning $bilan.Chainsaw
+}
+elseif (-not (Test-Path $ReglesSigma)) {
+    $bilan.Chainsaw = "ECHEC : dossier de regles introuvable ($ReglesSigma)"
+    Write-Warning $bilan.Chainsaw
+}
+elseif (Test-Path $CheminChainsaw) {
+    Write-Host "[Chainsaw] mapping retenu : $MappingChainsaw" -ForegroundColor DarkGray
     $sortie = "${base}_chainsaw.json"
     Write-Host "[Chainsaw] vos regles Sigma -> $sortie" -ForegroundColor Cyan
     try {
@@ -79,7 +121,7 @@ if (Test-Path $CheminChainsaw) {
         # texte de l'outil se melange a l'objet de bilan rendu en fin de script,
         # et le script appelant recoit un tableau au lieu d'un objet.
         & $CheminChainsaw hunt $Evtx `
-            --sigma  $RegleschainsawSigma `
+            --sigma  $ReglesSigma `
             --mapping $MappingChainsaw `
             --json --output $sortie | Out-Host
 
@@ -112,8 +154,11 @@ if (Test-Path $CheminHayabusa) {
     $sortie = "${base}_hayabusa.csv"
     Write-Host "[Hayabusa] jeu de regles curate -> $sortie" -ForegroundColor Cyan
     try {
-        & $CheminHayabusa csv-timeline --file $Evtx --output $sortie `
-            --no-wizard --quiet | Out-Host
+        # --clobber : sans lui, la deuxieme campagne echoue parce que le fichier
+        # de sortie existe deja. --no-wizard : sinon l'outil attend une reponse
+        # au clavier et le script reste bloque indefiniment.
+        & $CheminHayabusa $CommandeHayabusa --file $Evtx --output $sortie `
+            --no-wizard --quiet --clobber | Out-Host
 
         if ($LASTEXITCODE -ne 0) {
             $bilan.Hayabusa = "ECHEC : code de sortie $LASTEXITCODE"
