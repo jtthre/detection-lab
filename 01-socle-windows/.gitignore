@@ -1,0 +1,19 @@
+# Sorties de conversion — régénérables par convert.sh
+converti/
+
+# Journaux et artefacts bruts : jamais versionnés.
+# Un EVTX de lab peut contenir des noms de machines, des comptes, des adresses
+# internes. On versionne les règles et les preuves, pas les données brutes.
+*.evtx
+*.pcap
+*.pcapng
+preuves/*.evtx
+preuves/raw/
+
+# Binaires : Sysmon se télécharge, il ne se versionne pas.
+*.exe
+*.zip
+
+# Système
+.DS_Store
+Thumbs.db

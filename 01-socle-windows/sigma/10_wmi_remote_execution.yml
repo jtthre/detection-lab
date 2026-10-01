@@ -1,0 +1,38 @@
+title: Processus lancé par le fournisseur WMI
+id: 9f343480-4182-436b-b3f0-151fe44d97c3
+status: experimental
+description: |
+  Détecte un processus dont le parent est WmiPrvSE.exe, signature d'une exécution
+  déclenchée par WMI — souvent à distance. C'est l'une des méthodes de déplacement
+  latéral les plus discrètes, parce qu'elle n'écrit aucun binaire sur le disque et
+  emprunte un service Windows légitime. La détection se fait uniquement par la
+  filiation des processus.
+references:
+    - https://attack.mitre.org/techniques/T1047/
+author: Mamadou Lamine Thiore (Junior)
+date: 2026-09-14
+tags:
+    - attack.execution
+    - attack.lateral-movement
+    - attack.t1047
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection:
+        ParentImage|endswith: '\WmiPrvSE.exe'
+        Image|endswith:
+            - '\cmd.exe'
+            - '\powershell.exe'
+            - '\pwsh.exe'
+            - '\wscript.exe'
+            - '\cscript.exe'
+            - '\rundll32.exe'
+            - '\regsvr32.exe'
+    condition: selection
+falsepositives:
+    - Outils d'inventaire et de supervision interrogeant les postes par WMI et
+      déclenchant des scripts — identifiez-les et filtrez par ligne de commande,
+      jamais en désactivant la règle.
+    - Solutions de télédistribution logicielle.
+level: high
