@@ -1,0 +1,14 @@
+# Sorties volumineuses d'Hayabusa en mode verbeux
+*.jsonl
+
+# Binaires de l'outillage : ils s'installent, ils ne se versionnent pas.
+outils/
+*.exe
+*.zip
+
+# Fichiers temporaires Windows
+Thumbs.db
+desktop.ini
+
+# On versionne EN REVANCHE preuves/*.evtx et rapports/* : ce sont les preuves
+# de la campagne, pas des artefacts de build.

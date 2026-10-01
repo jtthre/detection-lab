@@ -1,0 +1,8 @@
+# Les scripts PowerShell sont encodés en UTF-8 avec BOM : c'est ce que Windows
+# PowerShell 5.1 (celui livré avec Windows 11) attend pour lire correctement les
+# accents. Sans BOM, il suppose l'encodage ANSI et affiche du charabia.
+# Git ne touche pas au BOM ; on force seulement des fins de ligne Windows.
+*.ps1 text eol=crlf
+
+# Les preuves sont binaires : aucune conversion, jamais.
+*.evtx binary
