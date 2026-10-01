@@ -1,0 +1,10 @@
+﻿{
+    "Evtx":  "C:\\Lab\\detection-lab\\02-boucle-de-preuve\\preuves\\2026-10-01_231614_01-lsass.evtx",
+    "Etiquette":  "01-lsass",
+    "Horodatage":  "2026-10-01_231649",
+    "MappingUtilise":  "C:\\Lab\\outils\\chainsaw-full\\chainsaw\\mappings\\sigma-event-logs-all.yml",
+    "Chainsaw":  "ok",
+    "Hayabusa":  "ok",
+    "SortieChainsaw":  "C:\\Lab\\detection-lab\\02-boucle-de-preuve\\rapports\\2026-10-01_231649_01-lsass_chainsaw.json",
+    "SortieHayabusa":  "C:\\Lab\\detection-lab\\02-boucle-de-preuve\\rapports\\2026-10-01_231649_01-lsass_hayabusa.csv"
+}

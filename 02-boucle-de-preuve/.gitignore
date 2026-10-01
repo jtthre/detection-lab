@@ -12,3 +12,15 @@ desktop.ini
 
 # On versionne EN REVANCHE preuves/*.evtx et rapports/* : ce sont les preuves
 # de la campagne, pas des artefacts de build.
+
+# Sorties Hayabusa : 20 Mo piece, entierement regenerables depuis l'EVTX
+# par Invoke-Analyse.ps1. On versionne la preuve, pas le produit derive.
+rapports/*_hayabusa.csv
+
+# L'EVTX brut ne se versionne pas : 39 Mo contre 3,4 Mo une fois compresse.
+preuves/*.evtx
+
+# Mais l'archive de campagne, si. Cette exception doit imperativement venir
+# APRES la regle *.zip plus haut : dans un .gitignore, c'est la derniere
+# regle qui correspond qui l'emporte.
+!preuves/campagne-*.zip
