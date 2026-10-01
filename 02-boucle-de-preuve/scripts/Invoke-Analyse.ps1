@@ -42,9 +42,9 @@ $ErrorActionPreference = 'Stop'
 #  provoque une regle muette, ce qui est bien pire.
 # =============================================================================
 $CheminHayabusa      = 'C:\Lab\outils\hayabusa\hayabusa.exe'
-$CheminChainsaw      = 'C:\Lab\outils\chainsaw\chainsaw.exe'
+$CheminChainsaw      = 'C:\Lab\outils\chainsaw-full\chainsaw\chainsaw.exe'
 $ReglesSigma         = 'C:\Lab\detection-lab\01-socle-windows\sigma'
-$DossierMappings     = 'C:\Lab\outils\chainsaw\mappings'
+$DossierMappings     = 'C:\Lab\outils\chainsaw-full\chainsaw\mappings'
 # =============================================================================
 #
 #  Versions validees le 01/10/2026 :

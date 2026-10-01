@@ -14,7 +14,25 @@ numéro trouvé dans une documentation : prenez celui que votre binaire affiche.
 | sigma-cli | `sigma version` | | |
 | Atomic Red Team | `Get-Module Invoke-AtomicRedTeam` | | |
 | Hayabusa | `hayabusa.exe help` (bandeau) | **4.1.0 — Suzumushi** | 01/10/2026 |
-| Chainsaw | `chainsaw.exe --version` | | |
+| Chainsaw | `chainsaw.exe --version` | | 01/10/2026 |
+
+## Emplacements retenus
+
+| Quoi | Chemin dans la VM |
+|---|---|
+| Module Atomic Red Team | `C:\Lab\AtomicRedTeam\invoke-atomicredteam` |
+| Catalogue des atomiques | `C:\Lab\atomic-red-team-src\atomics` |
+| Hayabusa | `C:\Lab\outils\hayabusa\hayabusa.exe` |
+| Chainsaw | `C:\Lab\outils\chainsaw-full\chainsaw\chainsaw.exe` |
+| Mappings Chainsaw | `C:\Lab\outils\chainsaw-full\chainsaw\mappings` |
+| Dépôt | `C:\Lab\detection-lab` |
+
+Stratégie d'exécution PowerShell : `RemoteSigned` au niveau `CurrentUser`. Les scripts
+téléchargés doivent passer par `Unblock-File` avant de s'exécuter.
+
+Le chemin des atomiques est imposé par `$PSDefaultParameterValues` dans le profil PowerShell,
+et non par la variable globale `$PathToAtomicsFolder` : le module définit la sienne dans sa
+propre portée au moment de l'import, et la portée module l'emporte sur la portée globale.
 
 ## Dérives d'options rencontrées
 
