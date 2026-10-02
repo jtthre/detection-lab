@@ -26,6 +26,7 @@ detection:
             - 'pwsh.dll'
     selection_flag:
         CommandLine|contains:
+            - ' -e '
             - ' -enc '
             - ' -enco'
             - ' -encodedcommand'

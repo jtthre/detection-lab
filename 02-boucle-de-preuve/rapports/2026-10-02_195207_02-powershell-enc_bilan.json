@@ -1,0 +1,10 @@
+﻿{
+    "Evtx":  "C:\\Lab\\detection-lab\\02-boucle-de-preuve\\preuves\\2026-10-02_195130_02-powershell-enc.evtx",
+    "Etiquette":  "02-powershell-enc",
+    "Horodatage":  "2026-10-02_195207",
+    "MappingUtilise":  "C:\\Lab\\outils\\chainsaw-full\\chainsaw\\mappings\\sigma-event-logs-all.yml",
+    "Chainsaw":  "ok",
+    "Hayabusa":  "ok",
+    "SortieChainsaw":  "C:\\Lab\\detection-lab\\02-boucle-de-preuve\\rapports\\2026-10-02_195207_02-powershell-enc_chainsaw.json",
+    "SortieHayabusa":  "C:\\Lab\\detection-lab\\02-boucle-de-preuve\\rapports\\2026-10-02_195207_02-powershell-enc_hayabusa.csv"
+}
