@@ -10,6 +10,7 @@ references:
     - https://attack.mitre.org/techniques/T1003/001/
 author: Mamadou Lamine Thiore (Junior)
 date: 2026-09-14
+modified: 2026-10-02
 tags:
     - attack.credential-access
     - attack.t1003.001
@@ -20,20 +21,33 @@ detection:
     selection:
         TargetImage|endswith: '\lsass.exe'
         GrantedAccess|contains:
-            - '0x1010'   # PROCESS_VM_READ | PROCESS_QUERY_LIMITED_INFORMATION
+            - '0x1010'
             - '0x1410'
             - '0x1438'
             - '0x143a'
-            - '0x1fffff' # PROCESS_ALL_ACCESS
-    filter_legitimate:
-        SourceImage|endswith:
-            - '\wmiprvse.exe'
-            - '\taskmgr.exe'
-            - '\MsMpEng.exe'
-            - '\svchost.exe'
-    condition: selection and not filter_legitimate
+            - '0x1fffff'
+    # Filtre en chemin COMPLET, et non en |endswith. Un filtre d'exclusion est la
+    # porte de sortie de la règle : s'il accepte n'importe quel binaire dont le nom
+    # se termine par \svchost.exe, il suffit à un attaquant de nommer ainsi son
+    # outil pour disparaître. Une exclusion se verrouille toujours au chemin.
+    filter_systeme:
+        SourceImage:
+            - 'C:\Windows\System32\csrss.exe'
+            - 'C:\Windows\System32\wininit.exe'
+            - 'C:\Windows\System32\svchost.exe'
+            - 'C:\Windows\System32\taskmgr.exe'
+            - 'C:\Windows\System32\wbem\WmiPrvSE.exe'
+    # Defender vit sous un chemin versionné qui change à chaque mise à jour du
+    # moteur : on ancre le préfixe plutôt qu'un chemin exact.
+    filter_defender:
+        SourceImage|startswith: 'C:\ProgramData\Microsoft\Windows Defender\Platform\'
+        SourceImage|endswith: '\MsMpEng.exe'
+    condition: selection and not 1 of filter_*
 falsepositives:
     - Outils d'inventaire ou d'EDR non listés dans le filtre — à relever et ajouter
       au filtre après vérification de la signature du binaire source.
     - Sauvegarde ou supervision applicative interrogeant les processus système.
+    - "csrss.exe et wininit.exe ouvrent un handle 0x1fffff sur LSASS au démarrage de
+      Windows : 14 occurrences sur le journal du 20/09 au 02/10/2026. Ajoutés au
+      filtre en chemin complet le 02/10/2026."
 level: high

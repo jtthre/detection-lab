@@ -32,9 +32,20 @@ detection:
             - 'cmd.exe /c'
             - 'rundll32'
             - 'mshta'
-    condition: all of selection_*
+    # OneDrive ecrit des entrees RunOnce de nettoyage dont le Details reference
+    # \AppData\ : 4 faux positifs constates le 01/10/2026. On ancre sur DEUX
+    # champs, le binaire ET la forme de la commande — un seul serait trop facile
+    # a imiter. Limite assumee : filtre sur nom de binaire, impossible a
+    # verrouiller sur un chemin absolu puisque OneDrive s'installe dans le
+    # profil utilisateur. A compenser par une verification de signature (module 04).
+    filter_onedrive:
+        Image|endswith: '\Microsoft\OneDrive\Update\OneDriveSetup.exe'
+        Details|startswith: 'C:\WINDOWS\system32\cmd.exe /q /c '
+    condition: all of selection_* and not 1 of filter_*
 falsepositives:
     - Applications installées dans le profil utilisateur (navigateurs, clients de
       messagerie instantanée) qui s'enregistrent au démarrage depuis AppData.
     - À affiner — vérifier la signature du binaire pointé par Details.
+    - "OneDriveSetup.exe : entrees RunOnce de nettoyage apres mise a jour,
+      4 occurrences le 01/10/2026 — filtrees depuis."
 level: high

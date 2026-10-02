@@ -1,0 +1,10 @@
+﻿{
+    "Evtx":  "C:\\Lab\\detection-lab\\02-boucle-de-preuve\\preuves\\2026-10-01_campagne-T1003-001.evtx",
+    "Etiquette":  "01-04-final",
+    "Horodatage":  "2026-10-02_194158",
+    "MappingUtilise":  "C:\\Lab\\outils\\chainsaw-full\\chainsaw\\mappings\\sigma-event-logs-all.yml",
+    "Chainsaw":  "ok",
+    "Hayabusa":  "ok",
+    "SortieChainsaw":  "C:\\Lab\\detection-lab\\02-boucle-de-preuve\\rapports\\2026-10-02_194158_01-04-final_chainsaw.json",
+    "SortieHayabusa":  "C:\\Lab\\detection-lab\\02-boucle-de-preuve\\rapports\\2026-10-02_194158_01-04-final_hayabusa.csv"
+}
