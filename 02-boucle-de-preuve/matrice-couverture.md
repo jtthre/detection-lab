@@ -13,7 +13,7 @@ tableau prouve qu'on sait mesurer ce qu'on détecte et **nommer ce qu'on ne dét
 | # | Règle | Technique | Atomique | Détections | Verdict |
 |---|---|---|---|---|---|
 | 01 | Accès mémoire LSASS | T1003.001 | **2** — comsvcs.dll | 14 → **0** | **Non éprouvée** — bloquée par le noyau |
-| 02 | PowerShell encodé | T1059.001 | **15** + T1047-7 | 4 → **8** | **Corrigée** — faux négatif |
+| 02 | PowerShell encodé | T1059.001 | **15** + T1047-7 | 4 → **9** | **Corrigée** — faux négatif |
 | 03 | Tâche planifiée | T1053.005 | **1** | **2** | **Validée** |
 | 04 | Clé de démarrage | T1547.001 | — | 4 → **0** | **Corrigée** — faux positif |
 | 05 | Thread distant | T1055 | — | — | Non testée |
@@ -64,7 +64,8 @@ même signature : `powershell.exe & {Out-ATHPowerShellCommandLineParameter … -
 La règle matchait le **texte** ` -enco` à l'intérieur d'un bloc de script, pas un
 comportement.
 
-Dans le même journal se trouvaient **4 vraies commandes encodées** qu'elle ne voyait pas :
+Dans le même journal se trouvaient **5 vraies commandes encodées** qu'elle ne voyait pas
+(horodatages UTC) :
 
 | Horodatage | Parent | Forme |
 |---|---|---|
@@ -72,6 +73,7 @@ Dans le même journal se trouvaient **4 vraies commandes encodées** qu'elle ne 
 | 18:28:32 | `wbem\WmiPrvSE.exe` | idem |
 | 18:31:39 | `wbem\WmiPrvSE.exe` | idem |
 | 18:37:21 | `cmd.exe` | `powershell -exec bypass -e <base64>` |
+| 18:41:33 | `powershell.exe` | nettoyage de l'atomique — `-NoProfile -E <base64>` |
 
 La règle cherchait `' -enc '`, `' -enco'`, `' -encodedcommand'`, `' -ec '` — **pas `' -e '`**.
 Or `powershell.exe` accepte `-e` comme abréviation de `-EncodedCommand`, et c'est la forme la
@@ -80,7 +82,7 @@ plus courte, donc celle qu'un attaquant soucieux de discrétion choisira.
 **Taux de vrais positifs avant correction : 0 %.** La règle passait `sigma check` sans erreur
 et remontait des alertes — elle paraissait fonctionner. Elle était aveugle.
 
-Après ajout de `' -e '`, réanalyse du même EVTX : **8 détections, dont 4 vraies**.
+Après ajout de `' -e '`, réanalyse : **9 détections, dont 5 vraies**.
 
 **Les 4 faux positifs ne sont pas filtrés, délibérément.** Ils viennent d'une correspondance
 de sous-chaîne sur une ligne de commande. Le seul correctif propre serait une expression
@@ -155,16 +157,79 @@ Un plan de test qui s'appuierait sur `wmic` serait périmé sans que personne s'
 
 ---
 
+## Mesure de bruit au repos
+
+Fenêtre du 02/10 21:11 au 03/10 02:37 · aucun atomique lancé · **réseau branché (NAT) et
+Defender actif**, contrairement aux tests qui ont tourné hors ligne avec la protection en
+temps réel désactivée. Le référentiel n'est donc pas identique — c'est délibéré : une ligne
+de base doit ressembler à un poste ordinaire.
+
+### Résultat : zéro
+
+**Aucune des dix règles n'a déclenché pendant la fenêtre de repos.**
+
+| | |
+|---|---|
+| Événements Sysmon collectés | **1 743** |
+| Détections nouvelles | **0** |
+| Dernière détection du journal | 02/10 18:41:33 UTC, soit 30 min **avant** le début de la fenêtre |
+
+Répartition des 1 743 événements : 13 → 553 · 23 → 472 · 5 → 252 · 1 → 242 · 10 → 163 ·
+22 → 52 · 11 → 7 · 3 → 1 · 8 → 1.
+
+Deux identifiants apparaissent pour la première fois de la campagne : **l'événement 3**
+(connexion réseau, rendu possible par le NAT) et **l'événement 8** (thread distant). Le
+second est la donnée de la règle 05 — il existe donc sur cette machine, ce qui lève un doute
+avant même de tester cette règle.
+
+### Ce que cette mesure valide
+
+**Le filtre `filter_onedrive` tient en conditions réelles.** Sur cinq heures et demie,
+réseau branché et Defender actif, la règle 04 n'a produit aucune alerte. C'est une validation
+plus solide que la réanalyse d'un EVTX figé.
+
+**Les deux correctifs de la journée se tiennent ensemble** : 19 détections ramenées à 1 sur
+l'EVTX du 01/10, et 0 détection de bruit sur une fenêtre de repos indépendante.
+
+### Les limites de cette mesure
+
+**La fenêtre n'est pas celle annoncée.** Le script attendait 3 600 secondes de temps
+d'exécution, mais la VM a été suspendue par l'hyperviseur pendant une partie de la nuit —
+l'hôte s'est mis en veille — et les Outils VMware ont resynchronisé l'horloge au réveil.
+Résultat : 5 h 26 de temps mural pour environ 1 h de fonctionnement effectif. **Le compte de
+détections reste valide** (elles sont horodatées et toutes antérieures à la fenêtre), **mais
+le dénominateur ne l'est pas** : on ne peut pas dire « 1 743 événements par heure ».
+
+**Leçon retenue : une mesure de ligne de base exige que la veille soit désactivée sur l'hôte
+ET sur l'invité.** Sinon on mesure une machine endormie et on en conclut à tort que les règles
+sont silencieuses.
+
+```powershell
+powercfg /change standby-timeout-ac 0
+powercfg /change hibernate-timeout-ac 0
+powercfg /change monitor-timeout-ac 0
+```
+
+**Une heure sur une machine n'est pas une ligne de base, c'est un sondage.** Un vrai
+référentiel se mesure sur plusieurs jours et plusieurs postes, parce que le bruit a des
+cycles : maintenance nocturne, mises à jour hebdomadaires, sauvegardes. Ce qui est affirmé
+ici, et rien de plus : *sur une fenêtre de repos de 5 h 26 dont environ 1 h de fonctionnement
+effectif, 0 détection sur 1 743 événements collectés.*
+
+---
+
 ## Ce que la campagne a changé dans le dépôt
 
 | Règle | Avant | Après | Nature |
 |---|---|---|---|
 | 01 | 14 détections | 0 | Faux positifs `csrss` / `wininit`, filtre en chemin complet |
-| 02 | 4 détections, 0 vraie | 8 détections, 4 vraies | Faux négatif sur `-e` |
+| 02 | 4 détections, 0 vraie | 9 détections, 5 vraies | Faux négatif sur `-e` |
 | 04 | 4 détections | 0 | Faux positif `OneDriveSetup.exe` |
 
 **Sur l'EVTX du 01/10 : 19 détections ramenées à 1**, la seule authentique. Même journal,
 mêmes outils, règles corrigées.
+
+**Et 0 détection de bruit** sur une fenêtre de repos indépendante, réseau branché.
 
 ---
 
@@ -173,8 +238,9 @@ mêmes outils, règles corrigées.
 - **Tests 05 (T1055), 08 (T1543.003)** — non destructifs, à mener.
 - **Test 09 (T1490)** — destructif et non réversible par le framework. En dernier, instantané
   restauré juste après, preuves poussées **avant**.
-- **Mesure de bruit au repos** — 60 minutes, `-SansAtomique`. Sans ce dénominateur, le nombre
-  de faux positifs ne veut rien dire. C'est la mesure manquante la plus importante.
+- **Mesure de bruit refaite proprement** — veille désactivée sur l'hôte et l'invité, pour
+  obtenir un dénominateur exploitable. La mesure actuelle donne le bon verdict (0 détection)
+  mais pas un taux défendable.
 
 ---
 
