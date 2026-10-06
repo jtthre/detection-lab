@@ -30,7 +30,11 @@ detection:
             - 'powershell'
             - 'cmd.exe'
             - 'rundll32'
-    condition: all of selection_*
+    # Repertoire inscriptible uniquement par le systeme : un attaquant ne peut
+    # pas y deposer son binaire sans avoir deja les droits les plus eleves.
+    filter_defender:
+        Details|contains: '\ProgramData\Microsoft\Windows Defender\Platform\'
+    condition: all of selection_* and not 1 of filter_*
 falsepositives:
     - Certains logiciels installent légitimement un service depuis ProgramData —
       c'est le cas le plus fréquent, à filtrer nommément après vérification.

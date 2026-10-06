@@ -39,7 +39,9 @@ detection:
     # verrouiller sur un chemin absolu puisque OneDrive s'installe dans le
     # profil utilisateur. A compenser par une verification de signature (module 04).
     filter_onedrive:
-        Image|endswith: '\Microsoft\OneDrive\Update\OneDriveSetup.exe'
+        Image|endswith:
+            - '\Microsoft\OneDrive\Update\OneDriveSetup.exe'
+            - '\Microsoft\OneDrive\StandaloneUpdater\OneDriveSetup.exe'
         Details|startswith: 'C:\WINDOWS\system32\cmd.exe /q /c '
     condition: all of selection_* and not 1 of filter_*
 falsepositives:
