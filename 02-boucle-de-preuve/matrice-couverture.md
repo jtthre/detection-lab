@@ -1,7 +1,7 @@
 # Matrice de couverture — module 02
 
-Campagne des 1ᵉʳ et 2 octobre 2026 · VM Windows 11 isolée · Sysmon 15.22, schéma 4.91 ·
-Chainsaw sur les dix règles du module 01, Hayabusa en second avis.
+Campagne des 1ᵉʳ, 2 et 6 octobre 2026 · VM Windows 11 **Famille** isolée · Sysmon 15.22,
+schéma 4.91 · Chainsaw sur les dix règles du module 01, Hayabusa en second avis.
 
 Ce fichier est le livrable du module. Les règles prouvent qu'on sait écrire du YAML ; ce
 tableau prouve qu'on sait mesurer ce qu'on détecte et **nommer ce qu'on ne détecte pas**.
@@ -15,15 +15,16 @@ tableau prouve qu'on sait mesurer ce qu'on détecte et **nommer ce qu'on ne dét
 | 01 | Accès mémoire LSASS | T1003.001 | **2** — comsvcs.dll | 14 → **0** | **Non éprouvée** — bloquée par le noyau |
 | 02 | PowerShell encodé | T1059.001 | **15** + T1047-7 | 4 → **9** | **Corrigée** — faux négatif |
 | 03 | Tâche planifiée | T1053.005 | **1** | **2** | **Validée** |
-| 04 | Clé de démarrage | T1547.001 | — | 4 → **0** | **Corrigée** — faux positif |
-| 05 | Thread distant | T1055 | — | — | Non testée |
+| 04 | Clé de démarrage | T1547.001 | — | 4 → **0**, puis 4 → **0** | **Corrigée** — faux positif, en deux temps |
+| 05 | Thread distant | T1055.001 | **1** — mavinject | — | **Non éprouvée** — outil absent de l'édition |
 | 06 | Rundll32 détourné | T1218.011 | *(effet de bord de T1003.001-2)* | **1** | **Validée** |
 | 07 | LOLBin sortant | T1105 | — | — | **Non testable** sous Chainsaw |
-| 08 | Service suspect | T1543.003 | — | — | Non testée |
+| 08 | Service suspect | T1543.003 | *(lecture de -2 et -6)* | 1 → **0** | **Couverture partielle** — angle mort constaté |
 | 09 | Clichés instantanés | T1490 | — | — | Non testée *(destructif)* |
 | 10 | Exécution WMI | T1047 | **7** | **3** | **Validée** |
 
-**Résultat : 3 validées · 2 corrigées · 1 non éprouvée · 1 non testable · 3 non testées.**
+**Résultat : 3 validées · 2 corrigées · 1 couverture partielle · 2 non éprouvées · 1 non
+testable · 1 non testée.**
 
 ---
 
@@ -118,6 +119,31 @@ vérification de signature au module 04.
 
 Réanalyse du même EVTX après correction : **0**.
 
+**Le filtre a cédé trois jours plus tard.** Le 6 octobre à 01:57 UTC, 4 nouvelles alertes : même
+mécanisme, nouvelle version (`26.168.0830.0006`), mais écrites cette fois par
+`…\OneDrive\StandaloneUpdater\OneDriveSetup.exe`. **OneDrive possède deux programmes de mise à
+jour**, et le filtre n'en connaissait qu'un. Il tenait sur cinq heures de mesure ; il n'a pas
+tenu trois jours. Les deux chemins sont désormais listés, réanalyse : **4 → 0**.
+
+C'est l'illustration la plus nette de la campagne : **un filtre validé sur une fenêtre courte
+n'est pas un filtre validé.**
+
+### 05 — Thread distant : non éprouvée
+
+Atomique `T1055.001-1`. La cible a bien été lancée (deux processus Notepad à 19:19:16 et
+19:19:18 locale), mais **l'outil d'injection n'a jamais démarré** : aucun événement 1 pour lui,
+aucun événement 8 dans la fenêtre du test. `Test-Path` confirme qu'il n'existe pas sur la VM —
+c'est un composant des éditions Entreprise et Éducation, absent de l'édition Famille.
+
+La règle n'est pas en cause : il n'y avait rien à observer.
+
+**Bruit de fond constaté au passage.** Deux événements 8 à source `<unknown process>` en
+quelques heures — l'un vers `powershell.exe` (hors liste de cibles, pas d'alerte), l'autre vers
+`svchost.exe` à 01:35 UTC, une minute après une mise à jour de Defender (**1 alerte**). Le
+processus source se termine avant que Sysmon puisse le résoudre. **Ce faux positif n'est
+délibérément pas filtré** : exclure les sources inconnues offrirait une échappatoire à tout
+processus qui se termine assez vite.
+
 ### 06 — Rundll32 détourné : validée
 
 Pas d'atomique dédié : la règle a déclenché **sur le test de la règle 01**, qui utilisait
@@ -144,6 +170,28 @@ qui gèrent `cidr`. Validation reportée au module 04.
 S'ajoute une seconde contrainte : la VM est hors ligne, donc l'événement Sysmon 3 n'est jamais
 produit. Le groupe 3 de la configuration est une **liste blanche** — un binaire hors liste ne
 produit aucun événement, ce qui ne dit rien sur la règle.
+
+### 08 — Service suspect : couverture partielle
+
+**Aucun atomique n'a été lancé — le verdict vient de leur lecture.** L'atomique n°1 réécrit le
+service Fax, absent de l'édition Famille. Les n°2 et n°6, examinés avec `-ShowDetails`,
+inscrivent un `ImagePath` qui ne contient aucun des motifs de la règle (`\Users\`,
+`\AppData\`, `\Windows\Temp\`, `\ProgramData\`, `powershell`, `cmd.exe`, `rundll32`). Le n°3
+n'a pas été examiné.
+
+**Angle mort constaté** : la règle repose sur une liste noire de chemins. Un binaire de service
+installé dans n'importe quel autre répertoire lui échappe entièrement. Elle est correcte pour
+ce qu'elle décrit, mais elle ne décrit qu'une partie de la technique.
+
+**Piste de correction, non appliquée** : inverser la logique — signaler tout `ImagePath` *hors*
+des emplacements légitimes (`System32`, `Program Files`). Plus robuste, mais plus bruyante :
+à mesurer contre une ligne de base de plusieurs jours avant adoption.
+
+**Faux positif corrigé au passage.** Le 6 octobre à 01:34 UTC, `services.exe` réécrit
+l'`ImagePath` de `MDCoreSvc` vers `C:\ProgramData\Microsoft\Windows Defender\Platform\…` : une
+mise à jour de la plateforme Defender, attrapée par le motif `\ProgramData\`. Ce cas était
+anticipé dans le champ `falsepositives` dès le module 01. Filtre ajouté sur ce répertoire, qui
+n'est inscriptible que par le système. Réanalyse : **1 → 0**.
 
 ### 10 — Exécution WMI : validée
 
@@ -184,9 +232,10 @@ avant même de tester cette règle.
 
 ### Ce que cette mesure valide
 
-**Le filtre `filter_onedrive` tient en conditions réelles.** Sur cinq heures et demie,
-réseau branché et Defender actif, la règle 04 n'a produit aucune alerte. C'est une validation
-plus solide que la réanalyse d'un EVTX figé.
+**Le filtre `filter_onedrive` a tenu sur cette fenêtre.** Sur cinq heures et demie, réseau
+branché et Defender actif, la règle 04 n'a produit aucune alerte. *Il a cédé trois jours plus
+tard sur le second programme de mise à jour de OneDrive — voir la section 04, et la section
+suivante.*
 
 **Les deux correctifs de la journée se tiennent ensemble** : 19 détections ramenées à 1 sur
 l'EVTX du 01/10, et 0 détection de bruit sur une fenêtre de repos indépendante.
@@ -216,6 +265,39 @@ cycles : maintenance nocturne, mises à jour hebdomadaires, sauvegardes. Ce qui 
 ici, et rien de plus : *sur une fenêtre de repos de 5 h 26 dont environ 1 h de fonctionnement
 effectif, 0 détection sur 1 743 événements collectés.*
 
+### Ce que trois jours ont montré de plus
+
+Entre le 3 et le 6 octobre, la VM a tourné normalement, sans test. L'analyse du 6 octobre a
+fait apparaître **6 alertes de bruit**, toutes dans la nuit, toutes hors de toute fenêtre de
+test :
+
+| Heure UTC | Règle | Source | Traitement |
+|---|---|---|---|
+| 01:34:21 | 08 | Mise à jour de la plateforme Defender (`MDCoreSvc`) | Filtrée |
+| 01:35:32 | 05 | `<unknown process>` → `svchost.exe` | Documentée, **non filtrée** |
+| 01:57:08 – 01:57:47 | 04 ×4 | Second updater de OneDrive | Filtrée |
+
+**Cinq heures donnaient zéro ; trois jours en donnent six.** C'est exactement l'argument écrit
+plus haut — une heure est un sondage — et cette fois il est démontré. Après correction, il
+reste **1 alerte de bruit sur trois jours**, celle qu'on garde volontairement.
+
+---
+
+## Limite structurelle du lab : l'édition Famille
+
+Trois atomiques sont restés inutilisables pour des raisons d'édition ou de version de Windows :
+
+| Atomique | Ce qui manque | Pourquoi |
+|---|---|---|
+| T1047-1 à -4, -10, -12 | `wmic.exe` | Désactivé en 24H2, retiré en 25H2 |
+| T1543.003-1 | Service Fax | Fonctionnalité absente de l'édition Famille |
+| T1055.001-1 | `mavinject.exe` | Composant des éditions Entreprise et Éducation |
+
+Les vrais parcs d'entreprise tournent en Pro ou Entreprise, et c'est précisément sur leurs
+composants que s'appuient beaucoup de techniques. **Un lab en édition Famille sous-représente
+la surface d'attaque réelle.** Conséquence retenue : le module 05 (annuaire) sera monté sur une
+version d'évaluation Entreprise, et les règles 05 et 08 y seront éprouvées de nouveau.
+
 ---
 
 ## Ce que la campagne a changé dans le dépôt
@@ -224,23 +306,27 @@ effectif, 0 détection sur 1 743 événements collectés.*
 |---|---|---|---|
 | 01 | 14 détections | 0 | Faux positifs `csrss` / `wininit`, filtre en chemin complet |
 | 02 | 4 détections, 0 vraie | 9 détections, 5 vraies | Faux négatif sur `-e` |
-| 04 | 4 détections | 0 | Faux positif `OneDriveSetup.exe` |
+| 04 | 4 + 4 détections | 0 | Faux positif `OneDriveSetup.exe`, **deux** programmes de mise à jour |
+| 08 | 1 détection | 0 | Faux positif mise à jour de la plateforme Defender |
 
-**Sur l'EVTX du 01/10 : 19 détections ramenées à 1**, la seule authentique. Même journal,
-mêmes outils, règles corrigées.
+**Sur l'EVTX du 01/10 : 19 détections ramenées à 1**, la seule authentique.
 
-**Et 0 détection de bruit** sur une fenêtre de repos indépendante, réseau branché.
+**Sur l'EVTX du 06/10 : 21 détections ramenées à 16** — les 15 issues des tests, plus le seul
+faux positif conservé délibérément.
 
 ---
 
 ## Reste à faire
 
-- **Tests 05 (T1055), 08 (T1543.003)** — non destructifs, à mener.
 - **Test 09 (T1490)** — destructif et non réversible par le framework. En dernier, instantané
   restauré juste après, preuves poussées **avant**.
-- **Mesure de bruit refaite proprement** — veille désactivée sur l'hôte et l'invité, pour
-  obtenir un dénominateur exploitable. La mesure actuelle donne le bon verdict (0 détection)
-  mais pas un taux défendable.
+- **Règles 05 et 08** — à éprouver de nouveau sur une VM en édition Entreprise (module 05).
+- **Règle 08** — concevoir et mesurer la variante en liste blanche.
+- **Divergence Hayabusa** — 10 alertes « Potential PrintNightmare Exploitation Attempt » sans
+  équivalent dans les règles du dépôt. Bruit d'installation de pilotes ou angle mort : à
+  qualifier.
+- **Mesure de bruit refaite proprement** — plusieurs jours, veille désactivée sur l'hôte et
+  l'invité, pour obtenir un dénominateur exploitable.
 
 ---
 
