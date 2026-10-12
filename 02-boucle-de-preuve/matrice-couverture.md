@@ -1,6 +1,6 @@
 # Matrice de couverture — module 02
 
-Campagne des 1ᵉʳ, 2 et 6 octobre 2026 · VM Windows 11 **Famille** isolée · Sysmon 15.22,
+Campagne des 1ᵉʳ, 2, 6 et 12 octobre 2026 · VM Windows 11 **Famille** isolée · Sysmon 15.22,
 schéma 4.91 · Chainsaw sur les dix règles du module 01, Hayabusa en second avis.
 
 Ce fichier est le livrable du module. Les règles prouvent qu'on sait écrire du YAML ; ce
@@ -20,11 +20,11 @@ tableau prouve qu'on sait mesurer ce qu'on détecte et **nommer ce qu'on ne dét
 | 06 | Rundll32 détourné | T1218.011 | *(effet de bord de T1003.001-2)* | **1** | **Validée** |
 | 07 | LOLBin sortant | T1105 | — | — | **Non testable** sous Chainsaw |
 | 08 | Service suspect | T1543.003 | *(lecture de -2 et -6)* | 1 → **0** | **Couverture partielle** — angle mort constaté |
-| 09 | Clichés instantanés | T1490 | — | — | Non testée *(destructif)* |
-| 10 | Exécution WMI | T1047 | **7** | **3** | **Validée** |
+| 09 | Clichés instantanés | T1490 | **1** — vssadmin · **5** — WMI via PowerShell | **1** · **0** | **Validée** (branche vssadmin) — **angle mort mesuré** |
+| 10 | Exécution WMI | T1047 | **7** *(+ lancements WMI de T1059.001-15)* | **3** · **0** | **Validée** (interpréteurs) — **angle mort mesuré** |
 
-**Résultat : 3 validées · 2 corrigées · 1 couverture partielle · 2 non éprouvées · 1 non
-testable · 1 non testée.**
+**Résultat : 2 validées · 2 validées avec angle mort mesuré · 2 corrigées · 1 couverture
+partielle · 2 non éprouvées · 1 non testable.** Les dix règles ont reçu une réponse.
 
 ---
 
@@ -193,15 +193,63 @@ mise à jour de la plateforme Defender, attrapée par le motif `\ProgramData\`. 
 anticipé dans le champ `falsepositives` dès le module 01. Filtre ajouté sur ce répertoire, qui
 n'est inscriptible que par le système. Réanalyse : **1 → 0**.
 
-### 10 — Exécution WMI : validée
+### 09 — Clichés instantanés : validée sur vssadmin, angle mort mesuré
 
-Atomique `T1047-7`. **3 détections**, toutes avec `ParentImage = C:\Windows\System32\wbem\WmiPrvSE.exe`.
-La règle détecte bien un processus enfant du fournisseur WMI.
+Test destructif, lancé en dernier, instantané VMware pris VM éteinte, preuves poussées avant
+restauration (`campagne-09-T1490.zip`).
+
+**Test 1 — T1490-1, 06/10, marqueur 88181.** Événement 1 à 22:39:48 : `vssadmin.exe delete
+shadows /all /quiet`, parent `cmd.exe`, lui-même lancé par le framework. **Une seule détection
+après le marqueur** : règle 09, `critical`. Le `cmd.exe` parent porte la même chaîne dans sa
+ligne de commande mais ne déclenche pas — la sélection est ancrée sur `Image`, ce qui évite deux
+alertes pour un seul geste. Hayabusa concorde (« Shadow Copies Deletion Using Operating
+Systems Utilities », high, même seconde).
+
+Il n'y avait probablement aucun cliché à supprimer : la protection du système est souvent
+désactivée par défaut sur l'édition Famille. La règle a sonné quand même. **Elle détecte
+l'intention, pas le résultat** — exactement ce qu'on attend d'une alerte précoce de
+rançongiciel.
+
+**Test 2 — T1490-5, 12/10, marqueur 92181.** Même action, autre chemin : `powershell.exe`
+énumère les clichés par la classe WMI `Win32_ShadowCopy` et appelle leur méthode de
+suppression. **La règle 09 ne remonte rien.** Hayabusa remonte **deux alertes high** à la même
+seconde, dont « Deletion of Volume Shadow Copies via WMI with PowerShell ».
+
+**Angle mort mesuré** : la règle reconnaît l'action par le nom de quatre exécutables. La même
+action par un autre moyen lui échappe entièrement, et le même défaut vaut pour un `vssadmin.exe`
+copié sous un autre nom. La branche `wmic` est par ailleurs inutile sur ce parc (outil retiré
+en 25H2).
+
+**Règle 09 v2, proposée** : `OriginalFileName` sur la branche vssadmin, plus une branche
+PowerShell + `Win32_ShadowCopy` + suppression (`Delete`, `Remove-WmiObject`,
+`Remove-CimInstance`). Simulation de la logique sur les deux EVTX archivés (01/10 → 12/10,
+plus de 3 600 créations de processus chacun) : **1 détection par test, 0 ailleurs**. À
+confirmer sous Chainsaw avant de l'intégrer. Limite : une commande placée dans un script
+`.ps1` n'apparaît pas dans la ligne de commande — journal PowerShell 4104, module 04.
+
+### 10 — Exécution WMI : validée sur les interpréteurs, angle mort mesuré
+
+**Correction d'attribution (relecture du 12/10).** Les **3 détections** de la règle 10 ne
+viennent pas de l'atomique `T1047-7` : ce sont les trois `powershell.exe -NoProfile -E`
+lancés par `WmiPrvSE.exe` pendant les passages de `T1059.001-15` (18:05:24, 18:28:32,
+18:31:39 UTC — les trois lignes `WmiPrvSE.exe` du tableau de la règle 02), qui exécute sa commande par WMI. La règle les remonte correctement : elle est
+**validée pour un interpréteur lancé par le fournisseur WMI**.
+
+L'atomique `T1047-7` lui-même (02/10, marqueur 57464) a bien produit la donnée : à 18:37:23 UTC,
+**`notepad.exe` est lancé par `WmiPrvSE.exe`** via `Win32_Process.Create`. **Aucune détection** :
+la règle n'alerte que si l'enfant figure dans une liste d'interpréteurs (cmd, powershell, pwsh,
+wscript, cscript, rundll32, regsvr32). Un attaquant qui lance directement son propre binaire
+par WMI passe à travers. Même défaut que la règle 09 : une liste de noms d'outils.
+
+**Règle 10 v2, proposée** : alerter sur **tout** enfant de `WmiPrvSE.exe`, puis filtrer en
+chemin complet ce qui est légitime après mesure. Sur ce poste, du 01/10 au 12/10,
+`WmiPrvSE.exe` n'a eu **que 4 enfants, tous issus des tests** : 0 bruit. Sur un parc géré
+(inventaire, télédistribution), le bruit sera plus élevé — c'est la mesure de base qui dira quoi
+filtrer.
 
 **Note d'environnement** : `wmic.exe` est désactivé par défaut depuis Windows 11 24H2 et retiré
 en 25H2. Les atomiques 1 à 4, 10 et 12 sont donc inutilisables sur un système récent. La
 technique reste entière par PowerShell et `Win32_Process` — c'est ce que fait l'atomique 7.
-Un plan de test qui s'appuierait sur `wmic` serait périmé sans que personne s'en aperçoive.
 
 ---
 
@@ -318,8 +366,8 @@ faux positif conservé délibérément.
 
 ## Reste à faire
 
-- **Test 09 (T1490)** — destructif et non réversible par le framework. En dernier, instantané
-  restauré juste après, preuves poussées **avant**.
+- **Règles 09 et 10 v2** — écrire les deux variantes, les passer sous Chainsaw sur les EVTX
+  archivés et sur une mesure de bruit, puis les intégrer si le résultat confirme la simulation.
 - **Règles 05 et 08** — à éprouver de nouveau sur une VM en édition Entreprise (module 05).
 - **Règle 08** — concevoir et mesurer la variante en liste blanche.
 - **Divergence Hayabusa** — 10 alertes « Potential PrintNightmare Exploitation Attempt » sans
@@ -349,6 +397,14 @@ règles, et ça se note.
 **Le dépôt GitHub ne peut pas être le seul pont hôte ↔ VM pendant une campagne**, puisque la
 VM est isolée. Pendant une campagne, le clone de la VM est la copie de travail : commit local,
 réseau rebranché, push, *puis* restauration d'instantané.
+
+**Une règle qui reconnaît une action par le nom de l'outil rate la même action faite
+autrement.** Deux fois dans la campagne : la 09 (suppression des clichés par WMI) et la 10
+(binaire quelconque lancé par WMI). Le geste inévitable est la cible, pas l'outil.
+
+**On attribue une détection par son RecordId, jamais par sa proximité.** Les 3 détections de
+la règle 10 ont d'abord été créditées au mauvais test, parce qu'elles étaient dans le même
+EVTX. Seul le filtre sur le marqueur dit quel test les a produites.
 
 **On versionne la preuve, pas le produit dérivé.** Sorties Hayabusa exclues (20 Mo pièce,
 régénérables depuis l'EVTX), journal compressé en archive de campagne (39 Mo → 3,4 Mo).
