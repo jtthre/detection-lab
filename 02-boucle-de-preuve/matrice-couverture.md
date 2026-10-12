@@ -20,11 +20,11 @@ tableau prouve qu'on sait mesurer ce qu'on détecte et **nommer ce qu'on ne dét
 | 06 | Rundll32 détourné | T1218.011 | *(effet de bord de T1003.001-2)* | **1** | **Validée** |
 | 07 | LOLBin sortant | T1105 | — | — | **Non testable** sous Chainsaw |
 | 08 | Service suspect | T1543.003 | *(lecture de -2 et -6)* | 1 → **0** | **Couverture partielle** — angle mort constaté |
-| 09 | Clichés instantanés | T1490 | **1** — vssadmin · **5** — WMI via PowerShell | **1** · **0** | **Validée** (branche vssadmin) — **angle mort mesuré** |
-| 10 | Exécution WMI | T1047 | **7** *(+ lancements WMI de T1059.001-15)* | **3** · **0** | **Validée** (interpréteurs) — **angle mort mesuré** |
+| 09 | Clichés instantanés | T1490 | **1** — vssadmin · **5** — WMI via PowerShell | v1 : **1** · **0** — v2 : **1** · **1** | **Corrigée** — faux négatif, v2 validée sous Chainsaw |
+| 10 | Exécution WMI | T1047 | **7** *(+ lancements WMI de T1059.001-15)* | v1 : **3** · **0** — v2 : **3** · **1** | **Corrigée** — faux négatif, v2 validée sous Chainsaw |
 
-**Résultat : 2 validées · 2 validées avec angle mort mesuré · 2 corrigées · 1 couverture
-partielle · 2 non éprouvées · 1 non testable.** Les dix règles ont reçu une réponse.
+**Résultat : 2 validées · 4 corrigées · 1 couverture partielle · 2 non éprouvées · 1 non
+testable.** Les dix règles ont reçu une réponse.
 
 ---
 
@@ -193,7 +193,7 @@ mise à jour de la plateforme Defender, attrapée par le motif `\ProgramData\`. 
 anticipé dans le champ `falsepositives` dès le module 01. Filtre ajouté sur ce répertoire, qui
 n'est inscriptible que par le système. Réanalyse : **1 → 0**.
 
-### 09 — Clichés instantanés : validée sur vssadmin, angle mort mesuré
+### 09 — Clichés instantanés : faux négatif mesuré, corrigé en v2
 
 Test destructif, lancé en dernier, instantané VMware pris VM éteinte, preuves poussées avant
 restauration (`campagne-09-T1490.zip`).
@@ -220,14 +220,14 @@ action par un autre moyen lui échappe entièrement, et le même défaut vaut po
 copié sous un autre nom. La branche `wmic` est par ailleurs inutile sur ce parc (outil retiré
 en 25H2).
 
-**Règle 09 v2, proposée** : `OriginalFileName` sur la branche vssadmin, plus une branche
+**Règle 09 v2** : `OriginalFileName` sur la branche vssadmin, plus une branche
 PowerShell + `Win32_ShadowCopy` + suppression (`Delete`, `Remove-WmiObject`,
 `Remove-CimInstance`). Simulation de la logique sur les deux EVTX archivés (01/10 → 12/10,
-plus de 3 600 créations de processus chacun) : **1 détection par test, 0 ailleurs**. À
-confirmer sous Chainsaw avant de l'intégrer. Limite : une commande placée dans un script
+plus de 3 600 créations de processus chacun) : **1 détection par test, 0 ailleurs**.
+**Confirmé sous Chainsaw le 13/10** — tableau de validation à la fin de la section 10. Limite : une commande placée dans un script
 `.ps1` n'apparaît pas dans la ligne de commande — journal PowerShell 4104, module 04.
 
-### 10 — Exécution WMI : validée sur les interpréteurs, angle mort mesuré
+### 10 — Exécution WMI : faux négatif mesuré, corrigé en v2
 
 **Correction d'attribution (relecture du 12/10).** Les **3 détections** de la règle 10 ne
 viennent pas de l'atomique `T1047-7` : ce sont les trois `powershell.exe -NoProfile -E`
@@ -241,11 +241,24 @@ la règle n'alerte que si l'enfant figure dans une liste d'interpréteurs (cmd, 
 wscript, cscript, rundll32, regsvr32). Un attaquant qui lance directement son propre binaire
 par WMI passe à travers. Même défaut que la règle 09 : une liste de noms d'outils.
 
-**Règle 10 v2, proposée** : alerter sur **tout** enfant de `WmiPrvSE.exe`, puis filtrer en
+**Règle 10 v2** : alerter sur **tout** enfant de `WmiPrvSE.exe`, puis filtrer en
 chemin complet ce qui est légitime après mesure. Sur ce poste, du 01/10 au 12/10,
 `WmiPrvSE.exe` n'a eu **que 4 enfants, tous issus des tests** : 0 bruit. Sur un parc géré
 (inventaire, télédistribution), le bruit sera plus élevé — c'est la mesure de base qui dira quoi
 filtrer.
+
+**Validation de la v2 sous Chainsaw (13/10).** Les deux règles v2 ont été repassées sur les deux
+EVTX archivés de `campagne-09-T1490.zip`, sans relancer de test :
+
+| EVTX | Total v1 → v2 | Règle 09 | Règle 10 |
+|---|---|---|---|
+| 06/10 (`09-cliches`) | 18 → **19** | **1** — vssadmin | **4** — 3 powershell + notepad |
+| 12/10 (`09-angle-mort`) | 17 → **19** | **2** — vssadmin + powershell | **4** — idem |
+
+Les autres règles rendent exactement les mêmes comptes qu'en v1, et aucune nouvelle alerte
+n'apparaît hors des tests : **0 faux positif ajouté sur tout le journal disponible** (01/10 → 12/10).
+Les chiffres sont ceux que la simulation avait prédits. Rapports :
+`2026-10-13_010620_v2-09-cliches` et `2026-10-13_010815_v2-09-angle-mort`.
 
 **Note d'environnement** : `wmic.exe` est désactivé par défaut depuis Windows 11 24H2 et retiré
 en 25H2. Les atomiques 1 à 4, 10 et 12 sont donc inutilisables sur un système récent. La
@@ -356,6 +369,8 @@ version d'évaluation Entreprise, et les règles 05 et 08 y seront éprouvées d
 | 02 | 4 détections, 0 vraie | 9 détections, 5 vraies | Faux négatif sur `-e` |
 | 04 | 4 + 4 détections | 0 | Faux positif `OneDriveSetup.exe`, **deux** programmes de mise à jour |
 | 08 | 1 détection | 0 | Faux positif mise à jour de la plateforme Defender |
+| 09 | 1 · 0 | 1 · 1 | Faux négatif : branche PowerShell + WMI, `OriginalFileName` sur vssadmin |
+| 10 | 3 · 0 | 3 · 1 | Faux négatif : tout enfant de `WmiPrvSE.exe`, plus de liste d'interpréteurs |
 
 **Sur l'EVTX du 01/10 : 19 détections ramenées à 1**, la seule authentique.
 
@@ -366,8 +381,8 @@ faux positif conservé délibérément.
 
 ## Reste à faire
 
-- **Règles 09 et 10 v2** — écrire les deux variantes, les passer sous Chainsaw sur les EVTX
-  archivés et sur une mesure de bruit, puis les intégrer si le résultat confirme la simulation.
+- **Règle 10 v2 sur un parc géré** — sur un seul poste, `WmiPrvSE.exe` n'a lancé que les tests ;
+  avec un outil d'inventaire ou de télédistribution, il faudra mesurer puis filtrer en chemin complet.
 - **Règles 05 et 08** — à éprouver de nouveau sur une VM en édition Entreprise (module 05).
 - **Règle 08** — concevoir et mesurer la variante en liste blanche.
 - **Divergence Hayabusa** — 10 alertes « Potential PrintNightmare Exploitation Attempt » sans
