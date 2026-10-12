@@ -1,0 +1,10 @@
+﻿{
+    "Evtx":  "C:\\Lab\\detection-lab\\02-boucle-de-preuve\\preuves\\2026-10-12_225240_09-angle-mort.evtx",
+    "Etiquette":  "v2-09-angle-mort",
+    "Horodatage":  "2026-10-13_010815",
+    "MappingUtilise":  "C:\\Lab\\outils\\chainsaw-full\\chainsaw\\mappings\\sigma-event-logs-all.yml",
+    "Chainsaw":  "ok",
+    "Hayabusa":  "ok",
+    "SortieChainsaw":  "C:\\Lab\\detection-lab\\02-boucle-de-preuve\\rapports\\2026-10-13_010815_v2-09-angle-mort_chainsaw.json",
+    "SortieHayabusa":  "C:\\Lab\\detection-lab\\02-boucle-de-preuve\\rapports\\2026-10-13_010815_v2-09-angle-mort_hayabusa.csv"
+}
