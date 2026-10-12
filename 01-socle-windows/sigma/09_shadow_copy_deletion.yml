@@ -7,10 +7,16 @@ description: |
   d'empêcher toute restauration locale. Règle à très faible taux de faux positifs
   et à valeur opérationnelle maximale : quand elle se déclenche, il reste peu de
   temps pour réagir.
+  v2 (module 02) : la v1 ne reconnaissait l'action que par le nom de quatre
+  exécutables. Le test T1490-5 a montré que la même suppression, faite par WMI
+  depuis PowerShell, lui échappait entièrement. La v2 ajoute cette branche et
+  reconnaît vssadmin par son nom d'origine (OriginalFileName), pour qu'une copie
+  renommée du binaire ne suffise plus à passer.
 references:
     - https://attack.mitre.org/techniques/T1490/
 author: Mamadou Lamine Thiore (Junior)
 date: 2026-09-14
+modified: 2026-10-13
 tags:
     - attack.impact
     - attack.t1490
@@ -18,11 +24,15 @@ logsource:
     category: process_creation
     product: windows
 detection:
-    selection_vssadmin:
-        Image|endswith: '\vssadmin.exe'
+    # Branche vssadmin : nom de fichier OU nom d'origine inscrit dans le binaire.
+    vssadmin_image:
+        - Image|endswith: '\vssadmin.exe'
+        - OriginalFileName: 'VSSADMIN.EXE'
+    vssadmin_cmd:
         CommandLine|contains|all:
             - 'delete'
             - 'shadows'
+    # Conservée pour les systèmes antérieurs à Windows 11 24H2 (wmic retiré en 25H2).
     selection_wmic:
         Image|endswith: '\wmic.exe'
         CommandLine|contains|all:
@@ -38,8 +48,28 @@ detection:
         CommandLine|contains|all:
             - 'delete'
             - 'catalog'
-    condition: 1 of selection_*
+    # Branche ajoutée en v2 : la classe WMI des clichés, manipulée depuis PowerShell.
+    ps_image:
+        - Image|endswith:
+            - '\powershell.exe'
+            - '\pwsh.exe'
+        - OriginalFileName:
+            - 'PowerShell.EXE'
+            - 'pwsh.dll'
+    ps_cible:
+        CommandLine|contains: 'Win32_ShadowCopy'
+    ps_action:
+        CommandLine|contains:
+            - 'Delete'
+            - 'Remove-WmiObject'
+            - 'Remove-CimInstance'
+    # Condition explicite : « 1 of selection_* » ne fonctionne plus dès qu'une
+    # sélection est découpée en plusieurs blocs.
+    condition: (vssadmin_image and vssadmin_cmd) or selection_wmic or selection_bcdedit or selection_wbadmin or (ps_image and ps_cible and ps_action)
 falsepositives:
     - Opérations de maintenance de sauvegarde documentées et planifiées — si vous en
       avez, filtrez sur la tâche planifiée parente, pas sur la commande.
+    - "Limite connue : une commande placée dans un script .ps1 n'apparaît pas dans la
+      ligne de commande (seul le nom du script y figure). Il faut le journal des blocs
+      de script PowerShell (événement 4104) pour la voir — module 04."
 level: critical

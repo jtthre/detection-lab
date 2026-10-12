@@ -7,10 +7,16 @@ description: |
   latéral les plus discrètes, parce qu'elle n'écrit aucun binaire sur le disque et
   emprunte un service Windows légitime. La détection se fait uniquement par la
   filiation des processus.
+  v2 (module 02) : la v1 n'alertait que si l'enfant figurait dans une liste
+  d'interpréteurs. Le test T1047-7 a lancé notepad.exe par WMI sans déclencher : un
+  attaquant qui lance directement son propre binaire passait à travers. La v2 alerte
+  sur tout enfant de WmiPrvSE.exe. Mesure sur ce poste du 01/10 au 12/10/2026 :
+  WmiPrvSE.exe n'a eu que 4 enfants, tous issus des tests.
 references:
     - https://attack.mitre.org/techniques/T1047/
 author: Mamadou Lamine Thiore (Junior)
 date: 2026-09-14
+modified: 2026-10-13
 tags:
     - attack.execution
     - attack.lateral-movement
@@ -21,18 +27,13 @@ logsource:
 detection:
     selection:
         ParentImage|endswith: '\WmiPrvSE.exe'
-        Image|endswith:
-            - '\cmd.exe'
-            - '\powershell.exe'
-            - '\pwsh.exe'
-            - '\wscript.exe'
-            - '\cscript.exe'
-            - '\rundll32.exe'
-            - '\regsvr32.exe'
+    # Les exclusions viendront de la mesure, pas d'une intuition : chaque processus
+    # légitime relevé sur le parc s'ajoute ici en chemin COMPLET, jamais en |endswith.
     condition: selection
 falsepositives:
     - Outils d'inventaire et de supervision interrogeant les postes par WMI et
-      déclenchant des scripts — identifiez-les et filtrez par ligne de commande,
-      jamais en désactivant la règle.
-    - Solutions de télédistribution logicielle.
+      déclenchant des scripts ou des binaires — identifiez-les et filtrez en chemin
+      complet, jamais en désactivant la règle.
+    - Solutions de télédistribution logicielle (SCCM et équivalents) — volume
+      attendu bien plus élevé sur un parc géré que sur ce lab mono-poste.
 level: high
