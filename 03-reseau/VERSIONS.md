@@ -8,10 +8,11 @@ même pcap analysé à un mois d'écart ne donne pas les mêmes alertes.
 
 | Outil | Commande de vérification | Version installée | Date d'installation |
 |---|---|---|---|
-| Ubuntu Server | `lsb_release -d` | | |
-| Suricata | `suricata -V` | | |
-| Règles ET Open | `ls -l /var/lib/suricata/rules/suricata.rules` (date) et nombre de règles `alert` | | |
-| Zeek | `zeek --version` | | |
+| Ubuntu Server | `lsb_release -d` | **26.04.1 LTS** (noyau 7.0.0-38) | 13/10/2026 |
+| Suricata | `suricata -V` | **8.0.7** (PPA `oisf/suricata-stable`, paquet `1:8.0.7-0ubuntu3`) | 13/10/2026 |
+| Règles ET Open | `ls -l /var/lib/suricata/rules/suricata.rules` (date) et nombre de règles `alert` | **53 133** règles `alert` (`suricata-update` du 13/10/2026) | 13/10/2026 |
+| Zeek | `zeek --version` | **9.0.0** (LTS, dépôt OBS `security:zeek/xUbuntu_26.04`) | 13/10/2026 |
+| 7-Zip | `7z` (bandeau) | 26.00 | 13/10/2026 |
 | Python | `python3 --version` | | |
 | jq | `jq --version` | | |
 

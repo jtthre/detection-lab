@@ -5,7 +5,8 @@ Un dossier par analyse, produit par `scripts/analyser-pcap.sh` :
 ```
 <date>_<etiquette>/
 ├── resume.md          à lire en premier : chiffres, principales lignes, section Verdict
-├── balisement.md      sortie de balisement.py sur le conn.log
+├── balisement.md      sortie de balisement.py sur le conn.log (rythme des connexions)
+├── balisement-http.md sortie de balisement.py sur le http.log (rythme des requêtes)
 ├── suricata/
 │   ├── eve.json       tous les événements Suricata (alertes, flux, DNS, TLS, HTTP…)
 │   └── fast.log       les alertes seules, une ligne chacune

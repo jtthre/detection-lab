@@ -7,7 +7,8 @@
 # Produit, dans rapports/<date>_<etiquette>/ :
 #   suricata/eve.json, fast.log   alertes et événements de Suricata
 #   zeek/*.log                    journaux de Zeek (conn, dns, http, ssl, x509, files…)
-#   balisement.md                 sortie de balisement.py sur le conn.log
+#   balisement.md                 sortie de balisement.py sur le conn.log (rythme des connexions)
+#   balisement-http.md            sortie de balisement.py sur le http.log (rythme des requêtes)
 #   resume.md                     ce qu'on lit en premier : chiffres et principales lignes
 #
 # Le script mesure. Il ne conclut pas : la section Verdict de resume.md est à écrire.
@@ -60,6 +61,12 @@ echo "[4/4] Balisement et résumé"
 if [[ -f "$SORTIE/zeek/conn.log" ]]; then
     python3 "$RACINE/scripts/balisement.py" "$SORTIE/zeek/conn.log" --format md \
         > "$SORTIE/balisement.md" || true
+fi
+# Un implant peut garder une seule connexion ouverte et y enchaîner ses requêtes : son
+# rythme n'apparaît alors qu'au niveau des requêtes HTTP (cas NetSupport du 2026-02-28).
+if [[ -f "$SORTIE/zeek/http.log" ]]; then
+    python3 "$RACINE/scripts/balisement.py" "$SORTIE/zeek/http.log" --format md \
+        > "$SORTIE/balisement-http.md" || true
 fi
 
 # ---------------------------------------------------------------------------- résumé
@@ -158,12 +165,20 @@ set +e +o pipefail
             | awk -F'\t' '{split($1,a," "); printf "- %s × `%s` — %s\n", a[1], a[2], $2}'
     fi
     echo
-    echo "## Balisement"
+    echo "## Balisement — connexions (conn.log)"
     echo
     if [[ -s "$SORTIE/balisement.md" ]]; then
         tail -n +3 "$SORTIE/balisement.md"
     else
         echo "Aucune sortie (pas de conn.log, ou aucune paire évaluable)."
+    fi
+    echo
+    echo "## Balisement — requêtes HTTP (http.log)"
+    echo
+    if [[ -s "$SORTIE/balisement-http.md" ]]; then
+        tail -n +3 "$SORTIE/balisement-http.md"
+    else
+        echo "Aucune sortie (pas de http.log, ou aucune paire évaluable)."
     fi
     echo
     echo "## Verdict"

@@ -15,6 +15,7 @@ rapports/*/zeek/*-console.log
 rapports/*/zeek/.state/
 rapports/*/zeek/packet_filter.log
 rapports/*/zeek/loaded_scripts.log
+rapports/*/zeek/stats.log
 
 # On versionne EN REVANCHE eve.json, fast.log, les journaux Zeek, balisement.md et
 # resume.md : la capture n'étant pas dans le dépôt, ce sont eux la preuve.

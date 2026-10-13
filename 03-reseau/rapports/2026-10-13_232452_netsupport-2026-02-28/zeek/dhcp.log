@@ -1,0 +1,11 @@
+#separator \x09
+#set_separator	,
+#empty_field	(empty)
+#unset_field	-
+#path	dhcp
+#open	2026-10-13-23-26-02
+#fields	ts	uids	client_addr	server_addr	mac	host_name	client_fqdn	domain	requested_addr	assigned_addr	lease_time	client_message	server_message	msg_types	duration
+#types	time	set[string]	addr	addr	string	string	string	string	addr	addr	interval	string	string	vector[string]	interval
+1772308506.482909	CKJ5U94ed6nuAq7RNh	-	-	00:e0:4c:68:08:00	brads-MBP	-	-	-	-	-	-	-	DISCOVER	0.000000
+1772308507.959671	CczKTY3zXK6leLdOya,CKJ5U94ed6nuAq7RNh	10.2.28.88	10.2.28.1	00:19:d1:b2:4d:ad	DESKTOP-TEYQ2NR	DESKTOP-TEYQ2NR.easyas123.tech	mshome.net	10.2.28.88	10.2.28.88	604800.000000	-	-	REQUEST,REQUEST,ACK	2.829423
+#close	2026-10-13-23-26-08

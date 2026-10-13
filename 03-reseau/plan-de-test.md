@@ -10,7 +10,7 @@ de fausses alertes sur un poste sain ?**
 
 | Réglage | Valeur | Pourquoi |
 |---|---|---|
-| Système | Ubuntu Server **24.04 LTS** | Les paquets de Suricata (OISF) et de Zeek sont publiés en priorité pour cette version |
+| Système | Ubuntu Server **26.04.1 LTS** (24.04 était prévue) | Les deux outils ont des paquets pour la 26.04 : Suricata via le PPA de l'OISF, Zeek via le dépôt `xUbuntu_26.04` du service openSUSE Build Service |
 | Ressources | 4 Go de RAM, 2 processeurs, 30 Go de disque (un seul fichier) | Zeek et Suricata en mode fichier sont modestes ; le disque sert aux journaux |
 | Réseau | **NAT** pendant l'installation, puis **réseau hôte uniquement** | SSH depuis l'hôte reste possible, aucune route vers Internet ni le réseau domestique |
 | Paquets | OpenSSH server, aucun snap | Travail depuis Windows Terminal en `ssh`, copier-coller direct |
@@ -26,6 +26,13 @@ sudo add-apt-repository -y ppa:oisf/suricata-stable
 sudo apt-get update
 sudo apt-get install -y suricata
 suricata -V
+# Le paquet active un service Suricata sur la carte réseau : inutile ici, on lit des fichiers.
+sudo systemctl disable --now suricata
+# Les règles ne sont lisibles que par root et le groupe suricata. On analyse SANS root :
+# la 8.0.7 a corrigé 67 failles, en majorité dans les analyseurs de protocoles — faire
+# lire des captures de maliciels par un processus root, c'est exposer root au premier
+# paquet piégé.
+sudo usermod -aG suricata $USER     # puis se déconnecter / reconnecter
 ```
 
 **Les règles ET Open**, téléchargées et assemblées par `suricata-update` :
@@ -38,9 +45,10 @@ sudo suricata -T          # test de configuration avec les règles chargées
 **Zeek**, depuis ses paquets officiels (service openSUSE Build Service) :
 
 ```bash
-echo 'deb http://download.opensuse.org/repositories/security:/zeek/xUbuntu_24.04/ /' \
+V=$(. /etc/os-release; echo $VERSION_ID)     # le dépôt dépend de la version d'Ubuntu
+echo "deb http://download.opensuse.org/repositories/security:/zeek/xUbuntu_${V}/ /" \
   | sudo tee /etc/apt/sources.list.d/security:zeek.list
-curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_24.04/Release.key \
+curl -fsSL "https://download.opensuse.org/repositories/security:zeek/xUbuntu_${V}/Release.key" \
   | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null
 sudo apt-get update
 sudo apt-get install -y zeek
@@ -48,8 +56,20 @@ echo 'export PATH=$PATH:/opt/zeek/bin' >> ~/.bashrc && source ~/.bashrc
 zeek --version
 ```
 
-Si l'installation affiche une fenêtre de configuration de Postfix, choisir **« No
-configuration »** : la sonde n'envoie pas de courrier.
+**`zeekctl` installe un serveur de courrier** (Courier, sur Ubuntu 26.04) pour envoyer ses
+alertes par mail. Il démarre et écoute sur le réseau. Une sonde n'a pas à exposer de service
+inutile :
+
+```bash
+sudo systemctl disable --now courier courierfilter courier-mta courier-mta-ssl courier-msa
+sudo ss -tlnp      # attendu : seulement SSH (22) et le résolveur local (127.0.0.53/54:53)
+```
+
+**L'installateur d'Ubuntu n'utilise que la moitié du disque** (14 Go sur 30). Étendre :
+
+```bash
+sudo lvextend -r -l +100%FREE /dev/ubuntu-vg/ubuntu-lv
+```
 
 **Le dépôt** : `git clone` de `detection-lab` dans `~/detection-lab`, puis
 `chmod +x 03-reseau/scripts/*`.
@@ -72,11 +92,20 @@ Trois captures de **Malware-Traffic-Analysis.net**, choisies selon ces critères
 Pour chaque capture :
 
 ```bash
+sudo apt-get install -y 7zip poppler-utils
 mkdir -p ~/pcaps && cd ~/pcaps
-# téléchargement de l'archive depuis la page de l'article (URL notée dans preuves/sources.md)
-# extraction avec le mot de passe indiqué sur la page « about » du site
+wget <URL de l'archive, notée dans preuves/sources.md>
+7z x <archive>.zip        # 7z et non unzip : les archives chiffrées en AES ne s'ouvrent pas avec unzip
+ls -l                     # AUCUN fichier à 0 octet : une extraction ratée laisse un fichier vide
 sha256sum <capture>.pcap
 ```
+
+Le mot de passe est donné sur la page « about » du site ; il **change selon l'archive**. Un
+mauvais mot de passe laisse un fichier vide, dont l'empreinte (`e3b0c442…b855`) est celle de
+n'importe quel fichier vide : on contrôle la taille avant de reporter l'empreinte.
+
+Les réponses des exercices (PDF) se lisent dans la sonde, sans interface graphique :
+`pdftotext <fichier>.pdf - | less`.
 
 Reporter source, nom, empreinte et ce que dit le compte rendu dans `preuves/sources.md`
 **avant** l'analyse. On écrit la vérité terrain d'abord, on regarde les outils ensuite.
@@ -123,6 +152,18 @@ chaque capture d'infection, le balisement **avec la référence** :
 python3 scripts/balisement.py rapports/<dossier>/zeek/conn.log \
     --reference rapports/<dossier normal>/zeek/conn.log --format md
 ```
+
+Le balisement se mesure à **deux niveaux**, et `analyser-pcap.sh` produit les deux :
+
+| Journal | Un événement = | Voit | Rate |
+|---|---|---|---|
+| `conn.log` → `balisement.md` | une connexion | l'implant qui ouvre une connexion par rappel | l'implant qui garde une connexion ouverte et y enchaîne ses requêtes |
+| `http.log` → `balisement-http.md` | une requête HTTP | ce second cas, si le C2 parle HTTP en clair | tout C2 chiffré (TLS) : `http.log` est vide pour lui |
+
+`--externes-seulement` écarte les destinations privées, multicast et de diffusion : le trafic
+Windows interne (NetBIOS toutes les ~5 min, contrôleur de domaine) est régulier par nature et
+occupe sinon le haut du classement. L'option masque aussi un C2 interne : on la cite dans le
+verdict quand on l'utilise.
 
 ## Phase 5 — Le tableau de test
 

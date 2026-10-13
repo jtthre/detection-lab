@@ -1,0 +1,37 @@
+#separator \x09
+#set_separator	,
+#empty_field	(empty)
+#unset_field	-
+#path	kerberos
+#open	2026-10-13-23-24-45
+#fields	ts	uid	id.orig_h	id.orig_p	id.resp_h	id.resp_p	request_type	client	service	success	error_msg	from	till	cipher	forwardable	renewable	client_cert_subject	client_cert_fuid	server_cert_subject	server_cert_fuid
+#types	time	string	addr	port	addr	port	string	string	string	bool	string	time	time	string	bool	bool	string	string	string	string
+1769555045.791578	CjISTnAnuRMTVMF5e	10.1.21.58	50753	10.1.21.2	389	AP	/WIN11OFFICE.COM	ldap/win-lu4l24x3ub7.win11office.com/win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555064.099509	C2whtf2VlAEOC9OmP	10.1.21.58	50757	10.1.21.2	88	AS	gwyatt/WIN11OFFICE	krbtgt/WIN11OFFICE	F	KDC_ERR_PREAUTH_REQUIRED	-	4124486885.000000	-	T	T	-	-	-	-
+1769555064.106583	COnH4X1DdlQjZhHHoi	10.1.21.58	50758	10.1.21.2	88	AS	gwyatt/WIN11OFFICE	krbtgt/WIN11OFFICE.COM	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1769555064.109992	CPgSpL3AGVEwWe3HS9	10.1.21.58	50759	10.1.21.2	88	TGS	gwyatt/WIN11OFFICE.COM	host/desktop-es9f3ml.win11office.com	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1769555064.268226	CaZLeg1VOTKfnneRL4	10.1.21.58	50763	10.1.21.2	88	TGS	gwyatt/WIN11OFFICE.COM	LDAP/WIN-LU4L24X3UB7.win11office.com/win11office.com	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1769555064.268311	CgdbN89GBXzH3wEe5	10.1.21.58	50764	10.1.21.2	88	TGS	gwyatt/WIN11OFFICE.COM	cifs/WIN-LU4L24X3UB7.win11office.com	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1769555064.270236	CgxvFq2JEqABp1cXJ4	10.1.21.58	50762	10.1.21.2	49668	AP	/WIN11OFFICE.COM	LDAP/WIN-LU4L24X3UB7.win11office.com/win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555064.271414	CGyYs31Nl6PWPDzy39	10.1.21.58	50765	10.1.21.2	88	TGS	gwyatt/WIN11OFFICE.COM	krbtgt/WIN11OFFICE.COM	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1769555064.272943	Cq6O3j3KEpIofFj5Yk	10.1.21.58	50761	10.1.21.2	445	AP	/WIN11OFFICE.COM	cifs/WIN-LU4L24X3UB7.win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555064.276649	C3ovOl3RQ6CPNx8DB7	10.1.21.58	50766	10.1.21.2	389	AP	/WIN11OFFICE.COM	LDAP/WIN-LU4L24X3UB7.win11office.com/win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555064.284281	CX77AHJBXe5ycboL2	10.1.21.58	50767	10.1.21.2	389	AP	/WIN11OFFICE.COM	LDAP/WIN-LU4L24X3UB7.win11office.com/win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555064.442008	Cf555quc2XLidlE11	10.1.21.58	50769	10.1.21.2	88	TGS	gwyatt/WIN11OFFICE.COM	cifs/WIN-LU4L24X3UB7	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1769555064.444215	CRHrgA4y3WjJJpkcF1	10.1.21.58	50768	10.1.21.2	445	AP	/WIN11OFFICE.COM	cifs/WIN-LU4L24X3UB7	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555125.184357	CAewAsU07GcBjVjGd	10.1.21.58	64796	10.1.21.2	49668	AP	/WIN11OFFICE.COM	LDAP/WIN-LU4L24X3UB7.win11office.com/win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555125.205527	Cpuwu93MbuBZaEbFz3	10.1.21.58	64797	10.1.21.2	389	AP	/WIN11OFFICE.COM	LDAP/WIN-LU4L24X3UB7.win11office.com/win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555125.209821	CoTdhq4QfXBhpjuHd4	10.1.21.58	64798	10.1.21.2	389	AP	/WIN11OFFICE.COM	LDAP/WIN-LU4L24X3UB7.win11office.com/win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555172.721157	CvIExt4vZXbcPDnWyl	10.1.21.58	61840	10.1.21.2	445	AP	/WIN11OFFICE.COM	cifs/WIN-LU4L24X3UB7.win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555365.745282	Cnq7Vr4N905LyXJiL4	10.1.21.58	61844	10.1.21.2	88	TGS	gwyatt/WIN11OFFICE.COM	ldap/win-lu4l24x3ub7.win11office.com	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1769555365.749697	CaEnjpzFnooLXigDc	10.1.21.58	61843	10.1.21.2	389	AP	/WIN11OFFICE.COM	ldap/win-lu4l24x3ub7.win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555365.763735	CX2Jz91EBxP7BPC9U8	10.1.21.58	61845	10.1.21.2	389	AP	/WIN11OFFICE.COM	ldap/win-lu4l24x3ub7.win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555410.964532	Cnnrhi4jzZkUEWw7r3	10.1.21.58	61847	10.1.21.2	49668	AP	/WIN11OFFICE.COM	LDAP/WIN-LU4L24X3UB7.win11office.com/win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555410.977752	C5bCDv1JgYikG1l5K5	10.1.21.58	61848	10.1.21.2	389	AP	/WIN11OFFICE.COM	LDAP/WIN-LU4L24X3UB7.win11office.com/win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555410.984394	C2GwS02FcdOuHLMvbc	10.1.21.58	61849	10.1.21.2	389	AP	/WIN11OFFICE.COM	LDAP/WIN-LU4L24X3UB7.win11office.com/win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555498.824593	C4aBH62uSzRGL7b5d8	10.1.21.58	61854	10.1.21.2	389	AP	/WIN11OFFICE.COM	ldap/win-lu4l24x3ub7.win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555498.878560	CQ3UBF4qEHRnaTky0e	10.1.21.58	61855	10.1.21.2	389	AP	/WIN11OFFICE.COM	ldap/win-lu4l24x3ub7.win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555633.087591	CVUBDN29ndSk5roVe2	10.1.21.58	61858	10.1.21.2	49668	AP	/WIN11OFFICE.COM	LDAP/WIN-LU4L24X3UB7.win11office.com/win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555633.101307	CDiEXH1tnNnGdhFhn9	10.1.21.58	61859	10.1.21.2	389	AP	/WIN11OFFICE.COM	LDAP/WIN-LU4L24X3UB7.win11office.com/win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1769555633.107035	Cmip4G2wYGojF1s651	10.1.21.58	61860	10.1.21.2	389	AP	/WIN11OFFICE.COM	LDAP/WIN-LU4L24X3UB7.win11office.com/win11office.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+#close	2026-10-13-23-24-47

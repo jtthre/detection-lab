@@ -1,19 +1,32 @@
 #!/usr/bin/env python3
 """
-balisement.py — repère les conversations trop régulières dans un conn.log de Zeek.
+balisement.py — repère les conversations trop régulières dans un journal de Zeek.
 
 Un implant C2 rappelle son serveur à intervalle fixe, avec une requête et une réponse
 de taille presque constante. Ni le chiffrement ni le changement de domaine n'effacent
 ce rythme. Ce script le mesure.
 
 ENTRÉE
-    Un conn.log de Zeek, au format TSV (par défaut) ou JSON (une ligne par connexion,
-    LogAscii::use_json=T). Le format est détecté automatiquement.
+    Un conn.log ou un http.log de Zeek, au format TSV (par défaut) ou JSON (une ligne par
+    événement, LogAscii::use_json=T). Le format et le type de journal sont détectés
+    automatiquement.
+
+    conn.log  : un événement = une connexion TCP/UDP ; volume = orig_bytes + resp_bytes.
+    http.log  : un événement = une requête HTTP ; volume = request_body_len + response_body_len.
+
+    Pourquoi les deux : un implant qui ouvre une connexion par rappel se voit dans conn.log.
+    Un implant qui garde UNE connexion ouverte et y enchaîne ses requêtes (keep-alive) n'y
+    laisse que quelques lignes, longues : le rythme n'existe plus qu'au niveau des requêtes.
+    Constaté sur la capture NetSupport du 2026-02-28 — 264 rappels HTTP vers le C2, portés
+    par trop peu de connexions pour être évalués dans conn.log.
 
 REGROUPEMENT
     Les connexions sont regroupées par paire (source, destination, port de destination).
-    Une paire n'est évaluée qu'à partir de --min-connexions connexions (20 par défaut) :
-    en dessous, aucune statistique n'est fiable.
+    Une paire n'est évaluée qu'à partir de --min-connexions connexions (20 par défaut) ET
+    sur au moins --duree-min secondes d'activité (300 par défaut). En dessous, aucune
+    statistique n'est fiable : cinq connexions en une minute paraissent « régulières »
+    sans rien dire d'un rythme. Constaté sur la capture Lumma du 2026-01-31 — une paire
+    Microsoft de 5 connexions en 74 s sortait à 0,78, au-dessus du vrai C2.
 
 LE SCORE (0 à 1)
     Statistiques robustes uniquement : médiane, écart absolu médian (MAD), asymétrie de
@@ -42,8 +55,16 @@ DESTINATION INÉDITE
     indice de contexte : un balisement vers une destination déjà vue mille fois est plus
     probablement une mise à jour qu'un C2.
 
+DESTINATIONS INTERNES
+    Avec --externes-seulement, seules les destinations publiques sont évaluées (sont
+    écartées : plages privées RFC 1918, lien local, multicast, diffusion). Le trafic
+    Windows interne est très régulier par nature — annonces NetBIOS toutes les ~5 min,
+    renouvellements vers le contrôleur de domaine — et occupe sinon le haut du classement.
+    L'option masque aussi un C2 interne (pivot) : ne l'utiliser qu'en le sachant.
+
 EXEMPLES
     python3 balisement.py conn.log
+    python3 balisement.py http.log --externes-seulement
     python3 balisement.py conn.log --reference normal/conn.log --seuil 0.8
     python3 balisement.py conn.log --ignorer exclusions.txt --format md > balisement.md
 
@@ -56,6 +77,7 @@ Auteur : Mamadou Lamine Thiore — module 03 du dépôt detection-lab.
 import argparse
 import ipaddress
 import json
+import signal
 import statistics
 import sys
 from collections import defaultdict
@@ -64,9 +86,11 @@ from datetime import datetime, timezone
 
 # --------------------------------------------------------------------------- lecture
 
-def lire_conn_log(chemin):
-    """Renvoie une liste de dicts avec ts, src, dst, port, proto, service, octets."""
-    connexions = []
+def lire_journal(chemin):
+    """Renvoie (type, événements). type = "conn" ou "http" ; chaque événement est un dict
+    avec ts, src, dst, port, proto, service, octets."""
+    evenements = []
+    genre = None
     with open(chemin, encoding="utf-8", errors="replace") as f:
         premiere = f.readline()
         f.seek(0)
@@ -79,19 +103,22 @@ def lire_conn_log(chemin):
                     e = json.loads(ligne)
                 except json.JSONDecodeError:
                     continue
-                connexions.append(_normaliser(e))
+                if genre is None:
+                    genre = "http" if "method" in e or "request_body_len" in e else "conn"
+                evenements.append(_normaliser(e, genre))
         else:
             champs = None
             for ligne in f:
                 ligne = ligne.rstrip("\n")
                 if ligne.startswith("#fields"):
                     champs = ligne.split("\t")[1:]
+                    genre = "http" if "request_body_len" in champs else "conn"
                     continue
                 if ligne.startswith("#") or not ligne or champs is None:
                     continue
                 valeurs = ligne.split("\t")
-                connexions.append(_normaliser(dict(zip(champs, valeurs))))
-    return [c for c in connexions if c is not None]
+                evenements.append(_normaliser(dict(zip(champs, valeurs)), genre))
+    return genre or "conn", [e for e in evenements if e is not None]
 
 
 def _nombre(v):
@@ -103,11 +130,21 @@ def _nombre(v):
         return 0
 
 
-def _normaliser(e):
+def _normaliser(e, genre):
     try:
         ts = float(e.get("ts"))
     except (TypeError, ValueError):
         return None
+    if genre == "http":
+        return {
+            "ts": ts,
+            "src": e.get("id.orig_h"),
+            "dst": e.get("id.resp_h"),
+            "port": str(e.get("id.resp_p")),
+            "proto": "tcp",
+            "service": "http " + (e.get("method") or "-"),
+            "octets": _nombre(e.get("request_body_len")) + _nombre(e.get("response_body_len")),
+        }
     return {
         "ts": ts,
         "src": e.get("id.orig_h"),
@@ -117,6 +154,18 @@ def _normaliser(e):
         "service": e.get("service") or "-",
         "octets": _nombre(e.get("orig_bytes")) + _nombre(e.get("resp_bytes")),
     }
+
+
+def interne(adresse):
+    """Vrai pour une destination non routable sur Internet (privée, lien local, multicast,
+    diffusion). Une adresse illisible est traitée comme externe : on ne masque pas ce
+    qu'on ne comprend pas."""
+    try:
+        ip = ipaddress.ip_address(adresse)
+    except ValueError:
+        return False
+    return (ip.is_private or ip.is_link_local or ip.is_multicast
+            or ip.is_loopback or ip == ipaddress.ip_address("255.255.255.255"))
 
 
 def lire_exclusions(chemin):
@@ -214,35 +263,52 @@ def niveau(score):
 
 
 def main():
-    p = argparse.ArgumentParser(description="Score de balisement sur un conn.log de Zeek.")
-    p.add_argument("conn_log")
-    p.add_argument("--reference", help="conn.log de trafic normal (destinations connues)")
+    # Sortie coupée par head ou less : terminer proprement, sans trace d'erreur.
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+    p = argparse.ArgumentParser(description="Score de balisement sur un conn.log ou un http.log de Zeek.")
+    p.add_argument("journal", help="conn.log ou http.log de Zeek")
+    p.add_argument("--reference", help="journal Zeek de trafic normal (destinations connues)")
     p.add_argument("--ignorer", help="fichier d'adresses ou réseaux CIDR à exclure")
-    p.add_argument("--min-connexions", type=int, default=20)
+    p.add_argument("--externes-seulement", action="store_true",
+                   help="n'évaluer que les destinations publiques (écarte privé, multicast, diffusion)")
+    p.add_argument("--min-connexions", type=int, default=20,
+                   help="nombre minimal d'événements (connexions ou requêtes) par paire")
+    p.add_argument("--duree-min", type=float, default=300.0,
+                   help="durée d'activité minimale d'une paire, en secondes")
     p.add_argument("--seuil", type=float, default=0.0,
                    help="n'afficher que les paires au-dessus de ce score")
     p.add_argument("--top", type=int, default=20)
     p.add_argument("--format", choices=["texte", "md", "json"], default="texte")
     a = p.parse_args()
 
-    connexions = lire_conn_log(a.conn_log)
-    if not connexions:
-        sys.exit(f"Aucune connexion lisible dans {a.conn_log}")
+    genre, evenements = lire_journal(a.journal)
+    if not evenements:
+        sys.exit(f"Aucun événement lisible dans {a.journal}")
+    unite = "requêtes" if genre == "http" else "connexions"
 
     exclusions = lire_exclusions(a.ignorer) if a.ignorer else []
     connues = None
     if a.reference:
-        connues = {c["dst"] for c in lire_conn_log(a.reference)}
+        connues = {e["dst"] for e in lire_journal(a.reference)[1]}
 
     paires = defaultdict(list)
-    for c in connexions:
-        if exclusions and (exclu(c["dst"], exclusions) or exclu(c["src"], exclusions)):
+    internes = 0
+    for e in evenements:
+        if exclusions and (exclu(e["dst"], exclusions) or exclu(e["src"], exclusions)):
             continue
-        paires[(c["src"], c["dst"], c["port"])].append(c)
+        if a.externes_seulement and interne(e["dst"]):
+            internes += 1
+            continue
+        paires[(e["src"], e["dst"], e["port"])].append(e)
 
     resultats = []
+    trop_courtes = 0
     for (src, dst, port), groupe in paires.items():
         if len(groupe) < a.min_connexions:
+            continue
+        temps = [g["ts"] for g in groupe]
+        if max(temps) - min(temps) < a.duree_min:
+            trop_courtes += 1
             continue
         r = scorer(groupe)
         if r["score"] < a.seuil:
@@ -259,17 +325,24 @@ def main():
     resultats.sort(key=lambda r: r["score"], reverse=True)
     resultats = resultats[: a.top]
 
-    evaluees = sum(1 for g in paires.values() if len(g) >= a.min_connexions)
-    entete = (f"{len(connexions)} connexions lues · {len(paires)} paires · "
-              f"{evaluees} évaluées (>= {a.min_connexions} connexions)")
+    evaluees = sum(1 for g in paires.values() if len(g) >= a.min_connexions) - trop_courtes
+    entete = (f"{genre}.log · {len(evenements)} {unite} lues · {len(paires)} paires · "
+              f"{evaluees} évaluées (>= {a.min_connexions} {unite} sur >= {a.duree_min:.0f} s)"
+              + (f" · {trop_courtes} écartées car trop brèves" if trop_courtes else "")
+              + (f" · {internes} {unite} vers des destinations internes ignorées" if internes else ""))
 
     if a.format == "json":
-        print(json.dumps({"resume": entete, "paires": resultats}, ensure_ascii=False, indent=2))
+        print(json.dumps({"journal": genre, "resume": entete, "paires": resultats},
+                         ensure_ascii=False, indent=2))
         return
 
     if a.format == "md":
-        print(f"# Balisement — `{a.conn_log}`\n\n{entete}\n")
-        print("| Score | Niveau | Source | Destination | Port | Service | Conn. | Intervalle médian | Gigue | Octets médians | Inédite |")
+        print(f"# Balisement — `{a.journal}`\n\n{entete}\n")
+        if not resultats:
+            print("Aucune paire évaluable au-dessus du seuil.")
+            return
+        col = "Req." if genre == "http" else "Conn."
+        print(f"| Score | Niveau | Source | Destination | Port | Service | {col} | Intervalle médian | Gigue | Octets médians | Inédite |")
         print("|---|---|---|---|---|---|---|---|---|---|---|")
         for r in resultats:
             ined = "—" if r["inedite"] is None else ("oui" if r["inedite"] else "non")
@@ -287,7 +360,7 @@ def main():
         ined = "" if r["inedite"] is None else ("  [destination inédite]" if r["inedite"] else "  [destination connue]")
         print(f"{r['score']:.3f}  {r['niveau']:<14} {r['src']} -> {r['dst']}:{r['port']} "
               f"({r['proto']}/{r['service']}){ined}")
-        print(f"       {r['connexions']} connexions, toutes les {r['intervalle_median_s']} s "
+        print(f"       {r['connexions']} {unite}, toutes les {r['intervalle_median_s']} s "
               f"(gigue {r['gigue_pct']} %), {r['octets_median']} octets médians, "
               f"du {horodatage(r['debut'])} au {horodatage(r['fin'])} UTC")
         print(f"       détail : intervalles {r['intervalles']} · "

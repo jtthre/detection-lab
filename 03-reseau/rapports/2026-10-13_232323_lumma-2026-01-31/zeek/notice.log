@@ -1,0 +1,13 @@
+#separator \x09
+#set_separator	,
+#empty_field	(empty)
+#unset_field	-
+#path	notice
+#open	2026-10-13-23-24-45
+#fields	ts	uid	id.orig_h	id.orig_p	id.resp_h	id.resp_p	fuid	file_mime_type	file_desc	proto	note	msg	sub	src	dst	p	n	peer_descr	actions	email_dest	suppress_for	remote_location.country_code	remote_location.region	remote_location.city	remote_location.latitude	remote_location.longitude
+#types	time	string	addr	port	addr	port	string	string	string	enum	enum	string	string	addr	addr	port	count	string	set[enum]	set[string]	interval	string	string	string	double	double
+1769555065.443292	CDW3zv1i3o3ynmTn76	10.1.21.58	50770	172.178.240.162	443	FQ0sd83gc0ChBpsg41	-	-	tcp	SSL::Invalid_Server_Cert	SSL certificate validation failed with (unable to get local issuer certificate)	CN=watson.events.data.microsoft.com,OU=WSE,O=Microsoft,L=Redmond,ST=WA,C=US	10.1.21.58	172.178.240.162	443	-	-	Notice::ACTION_LOG	(empty)	3600.000000	-	-	-	-	-
+1769555065.537153	C6aITer7WrtcOnzA2	10.1.21.58	50771	20.190.157.9	443	FlnmWb2DIPex1Xu77h	-	-	tcp	SSL::Invalid_Server_Cert	SSL certificate validation failed with (unable to get local issuer certificate)	CN=login.live.com,O=Microsoft Corporation,L=Redmond,ST=Washington,C=US	10.1.21.58	20.190.157.9	443	-	-	Notice::ACTION_LOG	(empty)	3600.000000	-	-	-	-	-
+1769555412.184418	CkSZTL152fTeR36DZ5	10.1.21.58	61851	20.49.150.241	443	FYdwgL1dNgjHkhKofb	-	-	tcp	SSL::Invalid_Server_Cert	SSL certificate validation failed with (unable to get local issuer certificate)	CN=settings-win.data.microsoft.com,OU=WSE,O=Microsoft,L=Redmond,ST=WA,C=US	10.1.21.58	20.49.150.241	443	-	-	Notice::ACTION_LOG	(empty)	3600.000000	-	-	-	-	-
+1769555460.395040	C80LUAEy22L3mgIRe	10.1.21.58	61852	104.208.16.95	443	FUwNUi3lIgrBDgnrnb	-	-	tcp	SSL::Invalid_Server_Cert	SSL certificate validation failed with (unable to get local issuer certificate)	CN=*.events.data.microsoft.com,OU=WSE,O=Microsoft,L=Redmond,ST=WA,C=US	10.1.21.58	104.208.16.95	443	-	-	Notice::ACTION_LOG	(empty)	3600.000000	-	-	-	-	-
+#close	2026-10-13-23-24-47
