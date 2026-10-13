@@ -1,0 +1,5 @@
+# Les scripts tournent sous Linux (la sonde) : fins de ligne LF imposées, même si le
+# dépôt est manipulé depuis Windows. Un script shell en CRLF échoue avec « bad interpreter ».
+*.sh text eol=lf
+*.py text eol=lf
+*.rules text eol=lf

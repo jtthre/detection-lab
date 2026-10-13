@@ -1,0 +1,12 @@
+# local.rules — nos propres règles Suricata (module 03).
+#
+# Plage de SID : 1000000 à 1999999, réservée à l'usage local par convention
+# (les jeux publics comme ET Open utilisent d'autres plages).
+#
+# Chaque règle s'accompagne, dans matrice-couverture.md :
+#   - de la capture sur laquelle elle a été écrite et où elle déclenche ;
+#   - de son résultat sur la capture de trafic normal (attendu : 0) ;
+#   - de ce qu'un attaquant devrait changer pour lui échapper.
+#
+# Chargement : sudo suricata-update --local <chemin>/03-reseau/regles/local.rules
+# (fusionne ces règles dans suricata.rules à chaque mise à jour).
