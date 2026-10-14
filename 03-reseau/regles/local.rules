@@ -10,3 +10,18 @@
 #
 # Chargement : sudo suricata-update --local <chemin>/03-reseau/regles/local.rules
 # (fusionne ces règles dans suricata.rules à chaque mise à jour).
+
+# ---------------------------------------------------------------------------------------
+# Lumma Stealer — vol des données de navigateur en HTTP clair
+# Capture d'origine : lumma-2026-01-31 (Malware-Traffic-Analysis, 2026-01-27 23:05 UTC)
+# Indicateur OBSERVÉ dans http.log, pas recopié du compte rendu : pour chaque navigateur,
+#   GET  /api/set_agent?id=<32 hex>&token=<hex>&description=&agent=<Chrome|Edge>
+#   POST /api/set_agent?id=…&token=…&description=&agent=<…>&act=log   (≈ 8 Ko envoyés)
+# Volontairement SANS nom de domaine, adresse ni port : 29 des 30 alertes ET Open sur cette
+# capture tombent si l'attaquant change de domaine ; celles-ci, non.
+# Pour leur échapper, il faut changer le chemin /api/set_agent ou ses paramètres, ou
+# passer ce volet en HTTPS (comme les 2,08 Mo déjà envoyés en TLS dans la même capture).
+
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"LOCAL Lumma Stealer - enregistrement d'un navigateur (GET /api/set_agent)"; flow:established,to_server; http.method; content:"GET"; http.uri; content:"/api/set_agent?id="; startswith; content:"&token="; distance:32; within:7; content:"&agent="; distance:0; pcre:"/^\/api\/set_agent\?id=[0-9A-F]{32}&token=[0-9a-f]+&/"; reference:url,malware-traffic-analysis.net/2026/01/31/index.html; classtype:trojan-activity; sid:1000001; rev:1; metadata:capture lumma-2026-01-31, created_at 2026_10_14;)
+
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"LOCAL Lumma Stealer - envoi des donnees d'un navigateur (POST /api/set_agent act=log)"; flow:established,to_server; http.method; content:"POST"; http.uri; content:"/api/set_agent?id="; startswith; content:"&agent="; distance:0; content:"&act=log"; distance:0; reference:url,malware-traffic-analysis.net/2026/01/31/index.html; classtype:trojan-activity; sid:1000002; rev:1; metadata:capture lumma-2026-01-31, created_at 2026_10_14;)

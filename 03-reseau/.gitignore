@@ -22,3 +22,8 @@ rapports/*/zeek/stats.log
 
 # Python
 __pycache__/
+
+# Trafic normal : trafic personnel (DNS, SNI, hôtes HTTP). Rien de brut n'est versionné,
+# seulement le résumé public, écrit à la main sans noms de domaine ni navigation.
+rapports/*_normal-*/*
+!rapports/*_normal-*/resume-public.md

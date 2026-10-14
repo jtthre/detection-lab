@@ -4,8 +4,8 @@ Le livrable du module. Pour chaque capture : ce que chaque outil a vu du canal d
 documenté, et pourquoi les autres ne l'ont pas vu. Pour le trafic normal : chaque fausse alerte,
 expliquée.
 
-État au 13/10/2026 : **2 captures sur 3 analysées** (canal HTTP clair, canal sur port non
-standard). Restent la capture à C2 chiffré (TLS) et la référence de trafic normal.
+État au 14/10/2026 : **2 captures d'infection sur 3 analysées** (canal HTTP clair, canal sur
+port non standard) et **référence de trafic normal analysée**. Reste la capture à C2 chiffré (TLS).
 
 ---
 
@@ -24,12 +24,24 @@ canal de commande) · **Pas vu**.
 
 | Source | Durée | Alertes Suricata | Paires au-dessus du seuil de balisement | Explication |
 |---|---|---|---|---|
-| VM Windows du lab | | | | |
+| VM Windows du lab (`pktmon`, 14/10/2026) | **1 h 36** (10:00:24 → 11:36:27 UTC), 1 248 072 paquets | **160 692**, dont 160 458 artefacts de capture, 73 anomalies de flux et 161 alertes ET INFO / HUNTING, toutes expliquées : **0 alerte malveillante** | `conn.log` : 4 au-dessus de 0,70, **toutes internes** ; 0 externe (max. 0,507). `http.log` : 1 à 0,797, **0 au-dessus de 0,85** | Windows Update, Defender, optimisation de livraison, NetBIOS, mDNS — voir ci-dessous |
 
 ## Règles écrites pour ce module
 
 | SID | Indicateur | Capture d'origine | Déclenche sur la capture | Sur le trafic normal | Ce qu'un attaquant changerait |
 |---|---|---|---|---|---|
+| 1000001 | `GET /api/set_agent?id=<32 hex>&token=…&agent=` (sans domaine, adresse ni port) | `lumma-2026-01-31` | **2 / 2** — Chrome 23:05:39.577 et Edge 23:05:47.406 ; ET 2066606 ne voit que Chrome | **0** sur 1 248 072 paquets | renommer le chemin ou les paramètres ; passer ce volet en HTTPS |
+| 1000002 | `POST /api/set_agent?…&agent=…&act=log` | `lumma-2026-01-31` | **2 / 2** — 23:05:40.514 et 23:05:47.793 ; aucune règle ET sur cet envoi | **0** | idem |
+
+Banc d'essai synthétique (`regles/tests/generer-cas-lumma.py`, 8 cas écrits à la main) :
+4 positifs détectés dont 2 vers un autre nom d'hôte, 4 négatifs muets — Suricata 7.0.3,
+14/10/2026. Puis la capture réelle, sous Suricata 8.0.7 avec ces seules règles (`-S`) :
+**exactement les 4 alertes prédites**, de `10.1.21.58` vers `153.92.1.49:80`, et rien d'autre.
+Sur la capture NetSupport (15 512 paquets, autre famille, 264 POST HTTP) : **0 alerte** —
+les règles ne confondent pas un autre canal HTTP malveillant avec Lumma.
+Enfin la référence de trafic normal (1 h 36, 1 248 072 paquets) : **0 alerte**. Les deux
+règles sont validées : elles voient les 4 requêtes Lumma là où ET Open n'en voit qu'une, et
+restent muettes sur une autre famille et sur un poste sain.
 
 ## Les lignes, en détail
 
@@ -108,6 +120,46 @@ ouverte efface en revanche son rythme de `conn.log`. Le
 balisement doit se mesurer au niveau des requêtes — ce que fait désormais `balisement.py` — et
 cette mesure ne vaut **que tant que le canal est en clair**.
 
+### Référence — trafic normal de la VM Windows, 2026-10-14
+
+**Capture.** `pktmon --comp nics --pkt-size 0`, fichier circulaire de 2 Go, VM Windows du lab
+revenue à l'instantané « VM outillée hors ligne — module 02 » (aucun test joué), Defender actif,
+NAT. L'instantané datant du 01/10, la VM a rattrapé deux semaines de mises à jour : les 2 Go
+ont été remplis en **1 h 36**. La conversion `etl2pcap` a été interrompue deux fois par un écran
+bleu 0x124 de la VM, causé par le **disque plein de l'hôte** (1,2 Go libres) ; le dernier bloc
+du pcapng est tronqué, ce qui ne prive l'analyse que des derniers paquets. Le fichier n'est
+**jamais versionné** (trafic personnel) ; seul un résumé sans noms de domaine l'est.
+
+**Suricata — 160 692 alertes, aucune malveillante.**
+
+| Alertes | Signature | Explication |
+|---|---|---|
+| 160 258 | `SURICATA IPv4 / TCPv4 / UDPv4 / UDPv6 invalid checksum` | **Artefact de capture** : Windows délègue les sommes de contrôle à la carte, `pktmon` voit les paquets sortants avant |
+| 200 | `SURICATA IPv4 total length smaller than header size` | **Artefact de capture** : segmentation déléguée à la carte (LSO), même mécanisme |
+| 73 | `Applayer Wrong direction first data`, `STREAM excessive retransmissions` | Anomalies de flux banales |
+| 156 | `ET INFO Windows Update P2P Activity` (2027766) | Optimisation de livraison vers `192.168.64.1:7680` : 156 connexions, autant qu'au balisement |
+| 3 | `ET INFO Packed Executable Download` (2014819) | Mises à jour de **Defender** (`/msdownload/update/software/defu/…/am_delta_…exe`, `am_base_patch1`, `am_engine_patch`) |
+| 1 | `ET HUNTING SUSPICIOUS Dotted Quad Host MZ Response` (2021076, gravité 2) | Le même `am_delta_…exe`, servi par un **nœud de cache Windows Update joint par adresse IP** (`85.208.10.203`, `cacheHostOrigin=2.au.download.windowsupdate.com`) : légitime |
+| 1 | `ET INFO Microsoft Connection Test` | Test de connectivité de Windows (NCSI) |
+
+**Balisement `conn.log`.** Quatre paires au-dessus de 0,70, toutes internes : NetBIOS vers la
+passerelle NAT toutes les 120 s (**1,0**), optimisation de livraison vers l'hôte toutes les 40 s
+(0,867), mDNS en IPv4 et IPv6 toutes les 121 s (0,72). Avec `--externes-seulement`, la meilleure
+paire externe plafonne à **0,507**.
+
+**Balisement `http.log`.** Une paire à **0,797** : 728 requêtes vers `85.208.10.201:80` (cache
+Windows Update joint par IP), morceaux de **262 144 octets** exactement, toutes les 1,5 s (gigue
+42 %). C'est la constance de la taille des morceaux qui fait le score. Les 3 589 requêtes vers
+`199.232.82.172` (`*.delivery.mp.microsoft.com`, `*.download.windowsupdate.com`) restent à 0,30.
+
+**Seuil retenu.** `http.log` + `--externes-seulement`, seuil **0,85** : 0 paire sur le trafic
+normal, et le C2 NetSupport sort à **1,0, marqué « destination inédite »** quand on compare à
+cette référence (`--reference`).
+
+**Limite.** 1 h 36 dominées par Windows Update : c'est une référence de poste qui se met à jour,
+pas d'une journée de travail. À refaire sur plusieurs heures (`--file-size 8192`) une fois la
+VM à jour.
+
 ## Enseignements de méthode
 
 1. **Mesurer au bon niveau.** Connexion ou requête : le même C2 passe de « non évaluable » à
@@ -126,4 +178,13 @@ cette mesure ne vaut **que tant que le canal est en clair**.
    est l'Active Directory de la victime, pas le C2 ; la capture Lumma comporte deux coquilles.
    Une vérité terrain se vérifie comme le reste.
 
-*(à compléter avec la capture TLS et le trafic normal)*
+6. **Capturer sur la machine elle-même fausse le paquet.** 99,9 % des alertes du trafic normal
+   viennent des sommes de contrôle et longueurs non encore calculées par la carte réseau. Un
+   capteur réseau (port miroir, TAP) n'a pas ce biais ; ici, on les identifie et on les écarte.
+7. **Une règle de chasse est une piste, pas un verdict.** `Dotted Quad Host MZ Response` a
+   raison sur le plan technique — un exécutable servi par une adresse IP — et tort sur
+   l'intention : c'est un cache Windows Update.
+8. **Une référence se dimensionne.** 2 Go = 1 h 36 sur un poste qui rattrape ses mises à jour.
+   Et l'hôte doit avoir la place : un disque plein a fait tomber la VM deux fois.
+
+*(à compléter avec la capture TLS)*

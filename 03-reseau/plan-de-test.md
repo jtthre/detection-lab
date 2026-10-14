@@ -179,10 +179,15 @@ verdict quand on l'utilise.
 À partir d'un indicateur **observé** dans une capture (pas recopié du compte rendu) :
 
 1. l'écrire dans `regles/local.rules` (SID 1000000 et plus) ;
-2. la charger : `sudo suricata-update --local ~/detection-lab/03-reseau/regles/local.rules` ;
+2. la tester **seule**, sans toucher au jeu installé ni passer root — `-S` remplace les règles
+   par ce seul fichier :
+   `suricata -r <capture> -k none -S regles/local.rules -l /tmp/test-regles` ;
+   d'abord sur le banc synthétique (`regles/tests/`), puis :
 3. prouver qu'elle déclenche sur la capture ;
 4. prouver qu'elle reste muette sur le trafic normal ;
-5. écrire ce qu'un attaquant devrait changer pour lui échapper.
+5. seulement ensuite, l'ajouter au jeu de la sonde :
+   `sudo suricata-update --local ~/detection-lab/03-reseau/regles/local.rules` ;
+6. écrire ce qu'un attaquant devrait changer pour lui échapper.
 
 ## Ce qu'on consigne pour chaque capture
 
