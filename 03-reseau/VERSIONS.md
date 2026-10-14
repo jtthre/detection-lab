@@ -44,3 +44,4 @@ analyse soit comparable à la suivante :
 | Règles Suricata assemblées | `/var/lib/suricata/rules/suricata.rules` |
 | Configuration Suricata | `/etc/suricata/suricata.yaml` |
 | Zeek | `/opt/zeek/bin` |
+| Adresse fixe de la sonde | `192.168.234.10/24` (`/etc/netplan/60-sonde-ip-fixe.yaml`), en plus de l'adresse automatique |
