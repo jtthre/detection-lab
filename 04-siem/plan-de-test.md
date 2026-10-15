@@ -22,33 +22,43 @@ Libérer la place en **déplaçant** `srv-wazuh` (44 Go) sur un autre disque : V
 copié, VM rouverte depuis son nouvel emplacement (réponse « I Moved It »), démarrage vérifié, puis
 seulement l'ancien dossier retiré du disque C:.
 
-## Phase 1 — La VM siem
+## Phase 1 — La VM siem-elastic
+
+Nom `siem-elastic` (VM, dossier et nom d'hôte) : une ancienne VM « SIEM » existe déjà dans la
+bibliothèque VMware ; elle reste **éteinte** pendant le module.
 
 | Réglage | Valeur | Pourquoi |
 |---|---|---|
-| Système | Ubuntu Server **26.04.1 LTS**, OpenSSH, aucun snap | même base que la sonde |
-| Ressources | **8 Go** de RAM, **4 processeurs**, **60 Go** alloués à la demande | Elasticsearch (tas 4 Go) + Kibana + Fleet Server |
-| Carte 1 | **Réseau hôte uniquement**, adresse fixe `192.168.234.20/24` | le réseau du lab, permanent |
-| Carte 2 | **NAT**, branchée seulement pendant les installations | paquets, intégrations et règles viennent d'Elastic |
+| Système | Ubuntu Server **26.04.1 LTS**, OpenSSH, aucun snap, clavier **French (AZERTY)** | même base que la sonde |
+| Ressources | **8 Go** de RAM, **4 cœurs**, **60 Go** alloués à la demande, accélération 3D désactivée, ni carte son ni imprimante | Elasticsearch (tas 4 Go) + Kibana + Fleet Server |
+| Carte 1 (`ens33`) | **Host-only**, `192.168.234.20/24` fixe, **sans passerelle ni DNS** | le réseau du lab, permanent |
+| Carte 2 (`ens34`) | **NAT**, DHCP, branchée seulement pendant les installations | paquets, intégrations et règles viennent d'Elastic |
 
-Adresse fixe, sur le modèle de la sonde (`/etc/netplan/60-siem-ip-fixe.yaml`, droits 600) :
+Assistant VMware en mode **Custom** avec *I will install the operating system later* (l'*Easy
+Install* imposerait un clavier QWERTY et créerait l'utilisateur). L'adresse fixe se règle dans
+l'installateur (écran réseau → `ens33` → *Edit IPv4* → *Manual*). Sans passerelle sur `ens33`, la
+seule route par défaut passe par la carte NAT : la débrancher coupe toute sortie.
 
-```yaml
-network:
-  version: 2
-  ethernets:
-    ens33:
-      dhcp4: true
-      addresses: [192.168.234.20/24]
+**Stockage** : l'installateur ne donne que la moitié du groupe LVM à `/` (29 Go sur 58). Éditer
+`ubuntu-lv` et lui donner tout l'espace.
+
+Contrôles (attendus) :
+
+```bash
+ip -br a          # ens33 192.168.234.20/24, ens34 en 192.168.64.x
+ip route          # une seule route par défaut, via ens34
+free -h           # ≈ 7,2 Gi
+df -h /           # ≈ 57 G
 ```
 
-Le nom de la carte (`ens33`, `ens34`…) se lit avec `ip -br a` : la carte hôte uniquement est celle
-qui reçoit une adresse en `192.168.234.`.
+Depuis la sonde : `ping -c 3 192.168.234.20`. Ensuite on travaille **en SSH depuis l'hôte**
+(`ssh mthiore@192.168.234.20`) : copier-coller sans VMware Tools. Mise à jour
+(`apt full-upgrade`, `apt autoremove`), puis instantané **« siem-elastic installée (phase 1) »**.
 
 ## Phase 2 — Elasticsearch et Kibana (carte NAT branchée)
 
 ```bash
-sudo apt-get update && sudo apt-get install -y apt-transport-https gpg curl jq
+sudo apt-get install -y apt-transport-https gpg curl jq
 wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/9.x/apt stable main" \
   | sudo tee /etc/apt/sources.list.d/elastic-9.x.list
@@ -58,49 +68,58 @@ sudo apt-get install -y elasticsearch=9.5.5 kibana=9.5.5
 sudo apt-mark hold elasticsearch kibana        # pas de mise à jour surprise au milieu du module
 ```
 
-L'installation affiche un mot de passe pour le superutilisateur `elastic`. On ne le recopie pas :
-on le **remplace** par un mot de passe choisi, tapé directement et rangé dans le gestionnaire :
+L'installation affiche un mot de passe généré pour le superutilisateur `elastic`. On ne le
+recopie pas : on le remplacera, **une fois Elasticsearch démarré** (l'outil passe par l'API).
 
-```bash
-sudo /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic -i
-```
-
-**Le tas de la JVM** — fixé, pas laissé au calcul automatique :
+**Le tas de la JVM** — fixé, pas laissé au calcul automatique — et le nom du cluster :
 
 ```bash
 printf -- '-Xms4g\n-Xmx4g\n' | sudo tee /etc/elasticsearch/jvm.options.d/heap.options
-```
-
-Dans `/etc/elasticsearch/elasticsearch.yml` : `cluster.name: detection-lab`,
-`node.name: siem`. Puis :
-
-```bash
+sudo sed -i 's/^#cluster.name:.*/cluster.name: detection-lab/; s/^#node.name:.*/node.name: siem-elastic/' /etc/elasticsearch/elasticsearch.yml
 sudo systemctl daemon-reload && sudo systemctl enable --now elasticsearch
-curl --cacert /etc/elasticsearch/certs/http_ca.crt -u elastic https://localhost:9200
+sudo /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic -i   # mot de passe choisi, rangé dans le gestionnaire
 ```
 
-**Kibana**, inscrit auprès d'Elasticsearch par un jeton à usage unique (valable 30 min) :
+Saisir le mot de passe **par collage** depuis le gestionnaire (clic droit dans le terminal), sans
+caractères accentués : une frappe à la main a donné un 401 au premier essai.
+
+**L'autorité de certification** : `/etc/elasticsearch` n'est lisible que par root et le groupe
+`elasticsearch` ; `curl` lancé par l'utilisateur répond « le fichier n'existe pas ». On en garde une
+copie dans le dossier personnel (certificat **public**, pas un secret) — c'est aussi elle que lit
+`verifier-siem.sh` :
 
 ```bash
-sudo /usr/share/elasticsearch/bin/elasticsearch-create-enrollment-token -s kibana
-sudo /usr/share/kibana/bin/kibana-setup --enrollment-token <jeton>
-sudo /usr/share/kibana/bin/kibana-encryption-keys generate -q    # 3 clés à ajouter à kibana.yml
+sudo cp /etc/elasticsearch/certs/http_ca.crt ~/http_ca.crt && sudo chown mthiore: ~/http_ca.crt
+curl --cacert ~/http_ca.crt -u elastic https://localhost:9200     # name siem-elastic, cluster detection-lab, 9.5.5
 ```
 
-Dans `/etc/kibana/kibana.yml` : `server.host: "0.0.0.0"`,
-`server.publicBaseUrl: "http://192.168.234.20:5601"`, et les trois clés
-`xpack.encryptedSavedObjects.encryptionKey`, `xpack.reporting.encryptionKey`,
-`xpack.security.encryptionKey`. **Sans la première, le moteur de règles de Security refuse de
-démarrer.** Ces clés sont des secrets : `kibana.yml` ne va pas dans le dépôt.
+**Kibana**, inscrit auprès d'Elasticsearch par un jeton à usage unique (valable 30 min). Le jeton et
+les clés de chiffrement passent d'un outil à l'autre **sans s'afficher** :
 
 ```bash
+sudo /usr/share/kibana/bin/kibana-setup --enrollment-token "$(sudo /usr/share/elasticsearch/bin/elasticsearch-create-enrollment-token -s kibana)"
+sudo /usr/share/kibana/bin/kibana-encryption-keys generate -q | sudo tee -a /etc/kibana/kibana.yml > /dev/null
+sudo grep -c 'encryptionKey' /etc/kibana/kibana.yml      # 3
+sudo sed -i 's|^#server.host:.*|server.host: "192.168.234.20"|; s|^#server.publicBaseUrl:.*|server.publicBaseUrl: "http://192.168.234.20:5601"|' /etc/kibana/kibana.yml
 sudo systemctl enable --now kibana
 ```
 
-**Un seul nœud = santé jaune** : les modèles d'index demandent un réplica qu'aucun second nœud ne
-peut porter. On le dit à Elasticsearch une fois pour toutes, dans le modèle personnalisable
-`logs@custom` (Kibana → Gestion de la pile → Modèles de composants), avec
-`"index": { "number_of_replicas": 0 }`.
+- `server.host` sur l'adresse du lab, **pas `0.0.0.0`** : Kibana n'écoute pas sur la carte NAT.
+- Les trois clés (`xpack.encryptedSavedObjects`, `xpack.reporting`, `xpack.security`) : **sans la
+  première, le moteur de règles de Security refuse de démarrer.** Ce sont des secrets :
+  `kibana.yml` ne va pas dans le dépôt.
+
+**Un seul nœud** : les modèles d'index demandent un réplica qu'aucun second nœud ne peut porter.
+On le dit à Elasticsearch une fois pour toutes, dans le modèle personnalisable `logs@custom` :
+
+```bash
+curl --cacert ~/http_ca.crt -u elastic -X PUT "https://localhost:9200/_component_template/logs@custom" \
+  -H 'Content-Type: application/json' -d '{"template":{"settings":{"index":{"number_of_replicas":0}}}}'
+curl --cacert ~/http_ca.crt -u elastic "https://localhost:9200/_cluster/health?pretty"   # green
+```
+
+Constat du 15/10 : Kibana s'ouvre depuis l'hôte (`http://192.168.234.20:5601`), cluster **green**,
+51 partitions primaires actives, 0 non assignée. Instantané **« phase 2 : Elastic + Kibana »**.
 
 ## Phase 3 — Fleet, intégrations et règles Elastic (carte NAT encore branchée)
 
@@ -108,14 +127,14 @@ Dans Kibana (`http://<adresse NAT>:5601` depuis l'hôte, puis `192.168.234.20` e
 
 1. **Fleet → Paramètres** : hôte Fleet Server `https://192.168.234.20:8220` ; sortie
    Elasticsearch `https://192.168.234.20:9200` avec l'empreinte de l'autorité de certification
-   (`openssl x509 -fingerprint -sha256 -noout -in /etc/elasticsearch/certs/http_ca.crt`).
-2. **Ajouter Fleet Server** sur la VM siem (mode démarrage rapide) : Kibana génère la commande
-   d'installation de l'agent, avec un jeton de service. Elle se lance telle quelle sur la VM siem.
+   (`openssl x509 -fingerprint -sha256 -noout -in ~/http_ca.crt`).
+2. **Ajouter Fleet Server** sur la VM siem-elastic (mode démarrage rapide) : Kibana génère la commande
+   d'installation de l'agent, avec un jeton de service. Elle se lance telle quelle sur la VM siem-elastic.
 3. **Intégrations** : installer les ressources de **Windows**, **System**, **Zeek** et
    **Suricata** (onglet Paramètres de chaque intégration).
 4. **Security → Règles → Ajouter les règles Elastic** : installer le paquet de règles prêtes à
    l'emploi. **N'en activer aucune pour l'instant.**
-5. **Agents pour les autres VM** : télécharger sur la VM siem, dans `~/agents/`, les archives
+5. **Agents pour les autres VM** : télécharger sur la VM siem-elastic, dans `~/agents/`, les archives
    d'Elastic Agent de la **même version** pour Linux (`.tar.gz`) et Windows (`.zip`). Les VM
    du lab les récupéreront par `scp` depuis la siem : elles n'ont pas besoin d'Internet.
 
@@ -125,7 +144,7 @@ Puis **débrancher la carte NAT** (VMware → Network Adapter 2 → décocher *C
 cd ~/detection-lab/04-siem && ./scripts/verifier-siem.sh
 ```
 
-Instantané **« siem installée hors ligne »**, VM éteinte.
+Instantané **« siem-elastic installée hors ligne »**, VM éteinte.
 
 ## Phase 4 — La source poste : la VM Windows
 

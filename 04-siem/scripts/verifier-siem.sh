@@ -10,14 +10,14 @@
 #
 # Variables facultatives :
 #   ES_URL  (https://192.168.234.20:9200)   KB_URL (http://192.168.234.20:5601)
-#   ES_CA   (/etc/elasticsearch/certs/http_ca.crt — sur une autre machine, une copie du fichier)
+#   ES_CA   (~/http_ca.crt : copie de /etc/elasticsearch/certs/http_ca.crt, illisible sans sudo)
 #
 # Le script ne modifie rien. Il constate.
 
 set -uo pipefail
 ES_URL="${ES_URL:-https://192.168.234.20:9200}"
 KB_URL="${KB_URL:-http://192.168.234.20:5601}"
-ES_CA="${ES_CA:-/etc/elasticsearch/certs/http_ca.crt}"
+ES_CA="${ES_CA:-$HOME/http_ca.crt}"
 echecs=0
 
 ok()     { printf '  %-30s OK      %s\n' "$1" "$2"; }

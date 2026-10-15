@@ -211,7 +211,7 @@ pour investiguer. Les versions et la taille du jeu de données sont vérifiées 
 ```mermaid
 flowchart TB
     subgraph HO["Réseau hôte uniquement 192.168.234.0/24 — aucune route vers Internet"]
-        SIEM["<b>VM siem</b> · 192.168.234.20<br/>Elasticsearch :9200<br/>Kibana :5601<br/>Fleet Server :8220"]
+        SIEM["<b>VM siem-elastic</b> · 192.168.234.20<br/>Elasticsearch :9200<br/>Kibana :5601<br/>Fleet Server :8220"]
         WIN["<b>VM Windows 11</b><br/>Sysmon + Elastic Agent"]
         SON["<b>Sonde</b> · 192.168.234.10<br/>Zeek + Suricata + Elastic Agent"]
     end
@@ -223,7 +223,7 @@ flowchart TB
 
 | VM | RAM | Disque | Rôle |
 |---|---|---|---|
-| **siem** (nouvelle) | **8 Go** | 60 Go, alloué à la demande | Elasticsearch (tas 4 Go), Kibana, Fleet Server |
+| **siem-elastic** (nouvelle) | **8 Go** | 60 Go, alloué à la demande | Elasticsearch (tas 4 Go), Kibana, Fleet Server |
 | Windows 11 du lab | **6 Go** pendant ce module | existant | source poste |
 | sonde | **3 Go** pendant ce module | existant | source réseau |
 

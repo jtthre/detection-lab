@@ -5,9 +5,9 @@ Kibana, Fleet Server et tous les agents doivent être **à la même version**.
 
 | Composant | Commande de vérification | Version installée | Date |
 |---|---|---|---|
-| Ubuntu Server (VM siem) | `lsb_release -d` | | |
-| Elasticsearch | `curl … https://localhost:9200` → `version.number` | | |
-| Kibana | Kibana → Aide → À propos | | |
+| Ubuntu Server (VM siem-elastic) | `lsb_release -d` | 26.04.1 LTS, à jour | 15/10/2026 |
+| Elasticsearch | `curl … https://localhost:9200` → `version.number` | **9.5.5** (build 48acba66, Lucene 10.5.1), `apt-mark hold` | 15/10/2026 |
+| Kibana | Kibana → Aide → À propos | **9.5.5**, `apt-mark hold` | 15/10/2026 |
 | Fleet Server (Elastic Agent) | Fleet → Agents | | |
 | Elastic Agent — VM Windows | Fleet → Agents | | |
 | Elastic Agent — sonde | Fleet → Agents | | |
@@ -40,9 +40,10 @@ Kibana, Fleet Server et tous les agents doivent être **à la même version**.
 
 | Quoi | Où |
 |---|---|
-| VM siem | `192.168.234.20`, réseau hôte uniquement (+ carte NAT débranchée hors installations) |
+| VM siem-elastic | `192.168.234.20` sur `ens33` (Host-only, sans passerelle) + `ens34` NAT débranchée hors installations |
 | Elasticsearch | `https://192.168.234.20:9200` |
 | Kibana | `http://192.168.234.20:5601` |
 | Fleet Server | `https://192.168.234.20:8220` |
-| Autorité de certification d'Elasticsearch | `/etc/elasticsearch/certs/http_ca.crt` (VM siem) |
-| Archives d'Elastic Agent | `~/agents/` (VM siem) |
+| Autorité de certification d'Elasticsearch | `/etc/elasticsearch/certs/http_ca.crt`, copie lisible `~/http_ca.crt` (VM siem-elastic) |
+| Cluster / nœud | `detection-lab` / `siem-elastic` |
+| Archives d'Elastic Agent | `~/agents/` (VM siem-elastic) |
