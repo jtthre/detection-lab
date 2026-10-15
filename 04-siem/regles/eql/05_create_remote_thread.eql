@@ -1,0 +1,1 @@
+any where (winlog.event_data.TargetImage like~ ("*\\explorer.exe", "*\\svchost.exe", "*\\lsass.exe", "*\\winlogon.exe", "*\\notepad.exe", "*\\spoolsv.exe")) and (not (process.executable.caseless like~ ("*\\MsMpEng.exe", "*\\csrss.exe", "*\\wininit.exe")))

@@ -1,0 +1,22 @@
+# Secrets : jamais versionnés (mots de passe, jetons, clés d'API, configurations qui en contiennent).
+.env
+*.env
+kibana.yml
+elasticsearch.yml
+*.key
+*.pem
+*.crt
+*.p12
+cle-api*.txt
+
+# Données brutes : la VM Windows envoie sa navigation au SIEM, rien de brut ne sort.
+*.pcap
+*.pcapng
+*.evtx
+exports-bruts/
+
+# Archives d'Elastic Agent (plusieurs centaines de Mo, téléchargeables)
+elastic-agent-*.tar.gz
+elastic-agent-*.zip
+
+__pycache__/

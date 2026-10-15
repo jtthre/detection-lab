@@ -1,0 +1,1 @@
+any where (process.executable.caseless:"*\\rundll32.exe" or process.pe.original_file_name:"RUNDLL32.EXE") and ((process.command_line like~ ("*rundll32.exe", "*rundll32", "*rundll32.exe\"")) or (process.command_line like~ ("*\\AppData\\Local\\Temp\\*", "*\\Users\\Public\\*", "*\\Downloads\\*", "*javascript:*", "*C:\\Windows\\Temp\\*")))

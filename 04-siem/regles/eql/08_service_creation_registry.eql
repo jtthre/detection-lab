@@ -1,0 +1,1 @@
+any where ((registry.path:"*\\System\\CurrentControlSet\\Services\\*" and registry.path:"*\\ImagePath") and (winlog.event_data.Details like~ ("*\\Users\\*", "*\\AppData\\*", "*\\Windows\\Temp\\*", "*\\ProgramData\\*", "*powershell*", "*cmd.exe*", "*rundll32*"))) and (not winlog.event_data.Details:"*\\ProgramData\\Microsoft\\Windows Defender\\Platform\\*")

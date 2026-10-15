@@ -337,9 +337,9 @@ module 02 apportera la mesure de couverture.
 | Module | Sujet | État |
 |---:|---|---|
 | 01 | Sysmon + Sigma — le socle | **terminé** |
-| 02 | Atomic Red Team, Hayabusa, Chainsaw — la boucle de preuve | à venir |
-| 03 | Suricata, Zeek — le réseau | à venir |
-| 04 | Elastic Security — la plateforme | à venir |
+| 02 | Atomic Red Team, Hayabusa, Chainsaw — la boucle de preuve | **terminé** |
+| 03 | Suricata, Zeek — le réseau | **terminé** |
+| 04 | Elastic Security (+ Splunk) — la plateforme | **en cours** |
 | 05 | GOAD, BloodHound, PingCastle — l'annuaire | à venir |
 | 06 | Velociraptor, Stratus Red Team, KQL — parc et cloud | à venir |
 | 07 | GLPI, supervision — le socle technicien | à venir |

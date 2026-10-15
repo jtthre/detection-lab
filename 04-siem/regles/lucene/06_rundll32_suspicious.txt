@@ -1,0 +1,1 @@
+(process.executable.caseless:*\\rundll32.exe OR process.pe.original_file_name:RUNDLL32.EXE) AND ((process.command_line:(*rundll32.exe OR *rundll32 OR *rundll32.exe\")) OR (process.command_line:(*\\AppData\\Local\\Temp\\* OR *\\Users\\Public\\* OR *\\Downloads\\* OR *javascript\:* OR *C\:\\Windows\\Temp\\*)))

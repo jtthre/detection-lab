@@ -1,0 +1,1 @@
+(winlog.event_data.TargetImage:(*\\explorer.exe OR *\\svchost.exe OR *\\lsass.exe OR *\\winlogon.exe OR *\\notepad.exe OR *\\spoolsv.exe)) AND (NOT (process.executable.caseless:(*\\MsMpEng.exe OR *\\csrss.exe OR *\\wininit.exe)))
