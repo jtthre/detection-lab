@@ -1,0 +1,73 @@
+#separator \x09
+#set_separator	,
+#empty_field	(empty)
+#unset_field	-
+#path	kerberos
+#open	2026-10-15-00-07-11
+#fields	ts	uid	id.orig_h	id.orig_p	id.resp_h	id.resp_p	request_type	client	service	success	error_msg	from	till	cipher	forwardable	renewable	client_cert_subject	client_cert_fuid	server_cert_subject	server_cert_fuid
+#types	time	string	addr	port	addr	port	string	string	string	bool	string	time	time	string	bool	bool	string	string	string	string
+1790882847.911550	CzlVok3SRkRTqJOJXf	10.10.1.128	49675	10.10.1.10	88	AS	desktop-4vgyqx7$/NATUREFORCE.COM	krbtgt/NATUREFORCE.COM	F	KDC_ERR_PREAUTH_REQUIRED	-	4124486885.000000	-	T	T	-	-	-	-
+1790882847.921354	CpOgLr2nng6pKlA2mj	10.10.1.128	49676	10.10.1.10	88	AS	desktop-4vgyqx7$/NATUREFORCE.COM	krbtgt/NATUREFORCE.COM	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882847.933875	C4Zdmi1mQsyKscstd5	10.10.1.128	49677	10.10.1.10	88	TGS	DESKTOP-4VGYQX7$/NATUREFORCE.COM	netlogon/WIN-LEKBU2OY51N.natureforce.com/natureforce.com	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882847.978665	CccWmk3oG6QFvKSM19	10.10.1.128	49679	10.10.1.10	88	TGS	DESKTOP-4VGYQX7$/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882847.982720	CmK66y3EGX6jxZXxO7	10.10.1.128	49678	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882848.016298	C35UHo2UIobWHNX2l6	10.10.1.128	49680	10.10.1.10	88	AS	desktop-4vgyqx7$/natureforce.com	krbtgt/natureforce.com	F	KDC_ERR_PREAUTH_REQUIRED	-	4124486885.000000	-	T	T	-	-	-	-
+1790882848.024068	CcMVlk3e8bxUvKGcId	10.10.1.128	49681	10.10.1.10	49669	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882848.025601	CyUXAUxrIrvfpwSAb	10.10.1.128	49682	10.10.1.10	88	AS	desktop-4vgyqx7$/natureforce.com	krbtgt/NATUREFORCE.COM	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882848.031044	CcJFqz3cnozZeHiI67	10.10.1.128	49683	10.10.1.10	88	TGS	DESKTOP-4VGYQX7$/NATUREFORCE.COM	cifs/WIN-LEKBU2OY51N.natureforce.com	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882848.033702	CyQrRg1kCzwlRq9D4	10.10.1.128	49684	10.10.1.10	88	TGS	DESKTOP-4VGYQX7$/NATUREFORCE.COM	krbtgt/NATUREFORCE.COM	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882848.035434	Cworef4WfEDA8ozOx6	10.10.1.128	49669	10.10.1.10	445	AP	/NATUREFORCE.COM	cifs/WIN-LEKBU2OY51N.natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882848.510842	CkurtfDXWuoNjjKvf	10.10.1.128	49689	10.10.1.10	88	AS	desktop-4vgyqx7$/natureforce.com	krbtgt/natureforce.com	F	KDC_ERR_PREAUTH_REQUIRED	-	4124486885.000000	-	T	T	-	-	-	-
+1790882848.512885	CiYsM64K5MqCVdmmff	10.10.1.128	49690	10.10.1.10	88	AS	desktop-4vgyqx7$/natureforce.com	krbtgt/NATUREFORCE.COM	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882848.516198	CjQfHv3rnrbG6G1nld	10.10.1.128	49691	10.10.1.10	88	TGS	DESKTOP-4VGYQX7$/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882848.520802	CRH88ROtm1XCPwH49	10.10.1.128	49667	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882848.571170	CKml9JIEEvSW2O1Aj	10.10.1.128	49692	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882848.601533	CPkXiJ1FWXWzxeGGxf	10.10.1.128	49693	10.10.1.10	88	TGS	DESKTOP-4VGYQX7$/NATUREFORCE.COM	DESKTOP-4VGYQX7$	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882848.614370	CbjTWX1hHAvCOCGGvc	10.10.1.128	49694	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882848.626811	C8JUyx2Bsc9OCLDBql	10.10.1.128	49695	10.10.1.10	88	TGS	DESKTOP-4VGYQX7$/NATUREFORCE.COM	cifs/WIN-LEKBU2OY51N.natureforce.com/natureforce.com	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882848.629429	CCOh2u2l83qKK7keA	10.10.1.128	49696	10.10.1.10	88	TGS	DESKTOP-4VGYQX7$/NATUREFORCE.COM	krbtgt/NATUREFORCE.COM	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882849.369373	COj2j01V2h5HdO3fof	10.10.1.128	49701	10.10.1.10	88	TGS	DESKTOP-4VGYQX7$/NATUREFORCE.COM	LDAP/WIN-LEKBU2OY51N.natureforce.com	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882849.373746	CR5dg3PsLP1gp40je	10.10.1.128	49700	10.10.1.10	49669	AP	/NATUREFORCE.COM	LDAP/WIN-LEKBU2OY51N.natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882849.715226	CfyDnL1Q7AUd5KJa5h	10.10.1.128	49706	10.10.1.10	49669	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882849.733932	CJdJPSp2gaa65e37	10.10.1.128	49707	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882849.739845	CstKyN1R3BtPv3n1Mb	10.10.1.128	49708	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882858.072830	CZL6MR1SONsPidk9B6	10.10.1.128	49715	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882858.091623	Cp1go84G7mVMsJzkm4	10.10.1.128	49716	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882858.095429	Cq76LX3olFEieihXfa	10.10.1.128	49717	10.10.1.10	88	AS	DESKTOP-4VGYQX7$/NATUREFORCE.COM	krbtgt/NATUREFORCE.COM	F	KDC_ERR_PREAUTH_REQUIRED	-	4124486885.000000	-	T	T	-	-	-	-
+1790882858.097052	CtgfHX3MDHR1nGJfc2	10.10.1.128	49718	10.10.1.10	88	AS	DESKTOP-4VGYQX7$/NATUREFORCE.COM	krbtgt/NATUREFORCE.COM	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882858.100031	C0qcVf4LaqtFa5UN5a	10.10.1.128	49719	10.10.1.10	88	TGS	DESKTOP-4VGYQX7$/NATUREFORCE.COM	desktop-4vgyqx7$	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882866.250254	CnJ11C46YmZX9SZrt1	10.10.1.128	49720	10.10.1.10	88	AS	bdiaz/NATUREFORCE	krbtgt/NATUREFORCE	F	KDC_ERR_PREAUTH_REQUIRED	-	4124486885.000000	-	T	T	-	-	-	-
+1790882866.253924	CU08zA1bDTZABWH02e	10.10.1.128	49721	10.10.1.10	88	AS	bdiaz/NATUREFORCE.COM	krbtgt/NATUREFORCE.COM	F	KDC_ERR_PREAUTH_REQUIRED	-	4124486885.000000	-	T	T	-	-	-	-
+1790882866.257675	CNKsNOfyplwO9Usc4	10.10.1.128	49722	10.10.1.10	88	AS	bdiaz/NATUREFORCE	krbtgt/NATUREFORCE.COM	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882866.262225	CDWgxh4DCcXycT4fm6	10.10.1.128	49724	10.10.1.10	88	AS	bdiaz/NATUREFORCE.COM	krbtgt/NATUREFORCE.COM	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882866.261035	C7JzJg1eeXb2L1VBVf	10.10.1.128	49723	10.10.1.10	88	TGS	bdiaz/NATUREFORCE.COM	host/desktop-4vgyqx7.natureforce.com	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882866.267149	Ctzs4h1LeKwfFDbn01	10.10.1.128	49725	10.10.1.10	88	TGS	bdiaz/NATUREFORCE.COM	LDAP/WIN-LEKBU2OY51N.natureforce.com/natureforce.com	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882866.277346	Cnac1H2b5cj9NE3ibd	10.10.1.128	49726	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882866.288242	Cknop34vupCL76zY84	10.10.1.128	49727	10.10.1.10	389	AP	/NATUREFORCE.COM	LDAP/WIN-LEKBU2OY51N.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882866.388870	CTGuRn31nB4t6dIYb	10.10.1.128	49729	10.10.1.10	88	TGS	bdiaz/NATUREFORCE.COM	cifs/WIN-LEKBU2OY51N	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882866.391449	CzL2ut3UV80hRhd3L6	10.10.1.128	49730	10.10.1.10	88	TGS	bdiaz/NATUREFORCE.COM	krbtgt/NATUREFORCE.COM	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790882866.393236	CJTXDt1SrOdEf6fTZ8	10.10.1.128	49728	10.10.1.10	445	AP	/NATUREFORCE.COM	cifs/WIN-LEKBU2OY51N	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882927.080811	CmfcBRStJnCWrwM37	10.10.1.128	57950	10.10.1.10	49669	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882927.096038	CB1Cfn4V1CtxY1WMD3	10.10.1.128	57951	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790882927.103085	CjxRul4flGskVVXF53	10.10.1.128	57952	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790883140.642448	CH3DCdhUMoLMvRym6	10.10.1.128	63728	10.10.1.10	88	TGS	bdiaz/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com	T	-	-	4124486885.000000	aes256-cts-hmac-sha1-96	T	T	-	-	-	-
+1790883140.646666	CDVV8o2p7DyJ6C9jBf	10.10.1.128	63727	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790883140.669410	CyslkE3CJmb0l21Qwb	10.10.1.128	63729	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790883159.488296	CIgHRr2Tjo0IzrPchl	10.10.1.128	63731	10.10.1.10	49669	AP	/NATUREFORCE.COM	LDAP/WIN-LEKBU2OY51N.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790883159.503562	C9iUg63b8YwcPUE6xa	10.10.1.128	63732	10.10.1.10	389	AP	/NATUREFORCE.COM	LDAP/WIN-LEKBU2OY51N.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790883159.512054	C8fUmX180vDxcmD9sf	10.10.1.128	63733	10.10.1.10	389	AP	/NATUREFORCE.COM	LDAP/WIN-LEKBU2OY51N.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790883168.100323	CpInVp1UEQpodoLzJf	10.10.1.128	63737	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790883168.118138	C9ZN5454vVC1crlo1	10.10.1.128	63738	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790883748.548887	Cf8NOp4uKHD0GvVtIk	10.10.1.128	63748	10.10.1.10	445	AP	/NATUREFORCE.COM	cifs/WIN-LEKBU2OY51N.natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790884502.955876	CSX19c1nb957x8CGgg	10.10.1.128	63752	10.10.1.10	49669	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790884502.970282	C4REBy18xidIffKQo3	10.10.1.128	63753	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790884502.976764	CxxBQx1Lgfyefj0Na2	10.10.1.128	63754	10.10.1.10	389	AP	/NATUREFORCE.COM	ldap/win-lekbu2oy51n.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790884648.578456	CnY0QEfYMDuMB4dWj	10.10.1.128	63758	10.10.1.10	445	AP	/NATUREFORCE.COM	cifs/WIN-LEKBU2OY51N.natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790884959.833977	CvRh1R3SrSOLrMc0Oa	10.10.1.128	63765	10.10.1.10	49669	AP	/NATUREFORCE.COM	LDAP/WIN-LEKBU2OY51N.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790884959.842317	CBE4dp1O1tg6asvkW3	10.10.1.128	63767	10.10.1.10	49669	AP	/NATUREFORCE.COM	LDAP/WIN-LEKBU2OY51N.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790884959.958835	CC6dR02suS3LETdzzh	10.10.1.128	63768	10.10.1.10	389	AP	/NATUREFORCE.COM	LDAP/WIN-LEKBU2OY51N.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790884959.966275	Cul4jFuHfZtgmG1Y6	10.10.1.128	63769	10.10.1.10	389	AP	/NATUREFORCE.COM	LDAP/WIN-LEKBU2OY51N.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790885143.182662	CiuLCY3iPC5Ofbjs43	10.10.1.128	63773	10.10.1.10	49669	AP	/NATUREFORCE.COM	LDAP/WIN-LEKBU2OY51N.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790885143.198384	CTK1m3yuLMkJnYnR6	10.10.1.128	63774	10.10.1.10	389	AP	/NATUREFORCE.COM	LDAP/WIN-LEKBU2OY51N.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+1790885143.206694	CXmnhn4r4ueoHAd2Wd	10.10.1.128	63775	10.10.1.10	389	AP	/NATUREFORCE.COM	LDAP/WIN-LEKBU2OY51N.natureforce.com/natureforce.com	T	-	-	-	aes256-cts-hmac-sha1-96	-	-	-	-	-	-
+#close	2026-10-15-00-07-25

@@ -25,3 +25,29 @@
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"LOCAL Lumma Stealer - enregistrement d'un navigateur (GET /api/set_agent)"; flow:established,to_server; http.method; content:"GET"; http.uri; content:"/api/set_agent?id="; startswith; content:"&token="; distance:32; within:7; content:"&agent="; distance:0; pcre:"/^\/api\/set_agent\?id=[0-9A-F]{32}&token=[0-9a-f]+&/"; reference:url,malware-traffic-analysis.net/2026/01/31/index.html; classtype:trojan-activity; sid:1000001; rev:1; metadata:capture lumma-2026-01-31, created_at 2026_10_14;)
 
 alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"LOCAL Lumma Stealer - envoi des donnees d'un navigateur (POST /api/set_agent act=log)"; flow:established,to_server; http.method; content:"POST"; http.uri; content:"/api/set_agent?id="; startswith; content:"&agent="; distance:0; content:"&act=log"; distance:0; reference:url,malware-traffic-analysis.net/2026/01/31/index.html; classtype:trojan-activity; sid:1000002; rev:1; metadata:capture lumma-2026-01-31, created_at 2026_10_14;)
+
+# ---------------------------------------------------------------------------------------
+# Port 443 sans protocole reconnu — canal de commande « sur mesure »
+# Capture d'origine : natureforce-2026-10-01 (RAT « CNCmachineRMS », C2 195.63.128.106:443)
+# Constat OBSERVÉ : une seule connexion de 37 min sur le port 443, que ni Zeek (service « - »)
+# ni Suricata (app_proto « failed ») ne reconnaissent — ni TLS, ni HTTP, ni rien de connu.
+# 13,4 Mo reçus par la victime. Aucune signature ET n'a vu ce canal.
+# La règle ne vise ni une famille, ni une adresse : elle vise un comportement. Le port 443 est
+# celui du HTTPS ; un flux qui l'utilise sans parler TLS se cache derrière lui (T1571).
+# flowbits : une seule alerte par flux, au lieu d'une par paquet.
+# Ne couvre PAS le HTTP en clair sur 443 (NetSupport) : Suricata le reconnaît comme « http »,
+# et ET Open l'alerte déjà (2013926).
+# Pour lui échapper : parler un vrai TLS (le canal redevient une session chiffrée parmi
+# d'autres), utiliser un autre port, ou ne garder chaque connexion ouverte que moins de 5 minutes.
+#
+# rev 1 (sans condition de durée) : 1 alerte sur Natureforce, mais 69 sur le trafic normal.
+#   Vérifié : 70 flux 443 « failed » dans le trafic normal, dont 69 portent l'alerte
+#   « Applayer Wrong direction first data » — des flux TLS légitimes dont Suricata n'a pas vu
+#   le premier message du client, écarté avec les gros paquets mal formés par la capture faite
+#   sur la machine elle-même (pktmon voit les paquets avant leur découpage par la carte).
+# rev 2 (flow.age > 60 s) : ne suffit pas, certains de ces flux dépassent 60 s (médiane 7 s, max. 185 s).
+# rev 3 (flow.age > 300 s) : au-delà du plus long flux légitime observé, avec de la marge ;
+#   le C2 Natureforce reste ouvert 37 min. Seuil réglé sur une référence de 1 h 36 : à revoir
+#   sur une référence plus longue.
+
+alert tcp $HOME_NET any -> $EXTERNAL_NET 443 (msg:"LOCAL Port 443 sans protocole reconnu, flux de plus de 5 minutes - canal sur mesure"; flow:established,to_server; app-layer-protocol:failed; flow.age:>300; flowbits:isnotset,local.port443_brut; flowbits:set,local.port443_brut; classtype:bad-unknown; sid:1000003; rev:3; metadata:capture natureforce-2026-10-01, created_at 2026_10_14, updated_at 2026_10_15;)

@@ -1,0 +1,9 @@
+10/01/2026-19:27:27.845472  [**] [1:2031071:5] ET INFO Microsoft Connection Test [**] [Classification: Misc activity] [Priority: 3] {TCP} 10.10.1.128:49670 -> 23.219.87.72:80
+10/01/2026-19:30:36.887372  [**] [1:2016141:9] ET INFO Executable Download from dotted-quad Host [**] [Classification: Potentially Bad Traffic] [Priority: 2] {TCP} 10.10.1.128:63723 -> 107.175.82.242:9000
+10/01/2026-19:30:36.887372  [**] [1:2034567:1] ET HUNTING curl User-Agent to Dotted Quad [**] [Classification: Potentially Bad Traffic] [Priority: 2] {TCP} 10.10.1.128:63723 -> 107.175.82.242:9000
+10/01/2026-19:30:36.887579  [**] [1:2221036:1] SURICATA HTTP Response excessive header repetition [**] [Classification: Generic Protocol Command Decode] [Priority: 3] {TCP} 107.175.82.242:9000 -> 10.10.1.128:63723
+10/01/2026-19:30:37.031346  [**] [1:2018959:6] ET INFO PE EXE or DLL Windows file download HTTP [**] [Classification: Potential Corporate Privacy Violation] [Priority: 1] {TCP} 107.175.82.242:9000 -> 10.10.1.128:63723
+10/01/2026-19:30:37.031346  [**] [1:2021076:3] ET HUNTING SUSPICIOUS Dotted Quad Host MZ Response [**] [Classification: Potentially Bad Traffic] [Priority: 2] {TCP} 107.175.82.242:9000 -> 10.10.1.128:63723
+10/01/2026-19:30:37.031346  [**] [1:2014819:5] ET INFO Packed Executable Download [**] [Classification: Misc activity] [Priority: 3] {TCP} 107.175.82.242:9000 -> 10.10.1.128:63723
+10/01/2026-19:30:44.127265  [**] [1:2047866:4] ET INFO Observed Google DNS over HTTPS Domain (dns .google in TLS SNI) [**] [Classification: Misc activity] [Priority: 3] {TCP} 10.10.1.128:63724 -> 8.8.4.4:443
+10/01/2026-19:30:55.252914  [**] [1:2210054:1] SURICATA STREAM excessive retransmissions [**] [Classification: Generic Protocol Command Decode] [Priority: 3] {TCP} 195.63.128.106:443 -> 10.10.1.128:63725

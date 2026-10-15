@@ -129,12 +129,28 @@ pktmon etl2pcap C:\Lab\normal.etl --out C:\Lab\normal.pcapng
 chaque paquet à plusieurs étages de la pile et le **compte plusieurs fois**, ce qui fausserait le
 balisement.
 
-Le fichier passe ensuite vers la sonde (`scp` depuis l'hôte). C'est du trafic personnel :
-il ne va **jamais** dans le dépôt.
+Ce qu'a appris la première capture (14/10/2026) :
+
+- **Dimensionner le fichier.** En mode circulaire, 2 Go ont été remplis en 1 h 36 par une VM
+  qui rattrapait ses mises à jour. Pour plusieurs heures : `--file-size 8192`, VM déjà à jour.
+- **Vérifier la place sur l'hôte avant `etl2pcap`.** La conversion écrit autant qu'elle lit ;
+  disque de l'hôte plein = écran bleu 0x124 dans la VM, deux fois, et un pcapng tronqué.
+- **S'attendre aux sommes de contrôle invalides.** Capturé sur la machine émettrice, chaque
+  paquet sortant porte une somme pas encore calculée par la carte : Suricata en tire 99,9 % de
+  ses alertes. C'est un artefact du capteur, pas un faux positif de détection.
+
+**Transfert.** Carte de la VM Windows en **réseau hôte uniquement**, puis `scp` direct de la
+VM vers la sonde (client OpenSSH intégré à Windows 11) : le fichier ne passe pas par l'hôte.
+Empreinte SHA-256 comparée des deux côtés. C'est du trafic personnel : il ne va **jamais** dans
+le dépôt (`.gitignore` n'en laisse passer que `resume-public.md`).
 
 ### Puis : isoler et figer
 
-1. Carte réseau de la sonde en **réseau hôte uniquement**.
+1. Carte réseau de la sonde en **réseau hôte uniquement**. La sonde garde l'adresse
+   automatique de VMware **et** une adresse fixe hors de la plage distribuée (.128 à .254),
+   `192.168.234.10`, déclarée dans `/etc/netplan/60-sonde-ip-fixe.yaml` (`dhcp4: true` +
+   `addresses: [192.168.234.10/24]`) : SSH et `scp` visent toujours `.10`, et la sonde retrouve
+   Internet en NAT sans rien changer.
 2. `./scripts/verifier-sonde.sh` : tous les contrôles à OK.
 3. Instantané **« sonde outillée hors ligne »**, VM éteinte.
 

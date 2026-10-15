@@ -1,0 +1,11 @@
+#separator \x09
+#set_separator	,
+#empty_field	(empty)
+#unset_field	-
+#path	quic
+#open	2026-10-15-00-07-11
+#fields	ts	uid	id.orig_h	id.orig_p	id.resp_h	id.resp_p	version	client_initial_dcid	client_scid	server_scid	server_name	client_protocol	history
+#types	time	string	addr	port	addr	port	string	string	string	string	string	string	string
+1790882869.962197	Cvpo9P50D5Lj4yyOe	10.10.1.128	49520	23.201.96.192	443	1	c864bc90495127fe	(empty)	02bc57870a00cc31	www.bing.com	h3	IISiiishhhhHHHOOOoooOooOoO
+1790882871.958801	Cfekss4AJD9z7uV1Bi	10.10.1.128	56998	23.201.96.192	443	1	078dbd251723be65	(empty)	01021cc60900cc31	www.bing.com	h3	IISiiishIHHOOhoooOoOoOoOoO
+#close	2026-10-15-00-07-25

@@ -1,0 +1,25 @@
+#separator \x09
+#set_separator	,
+#empty_field	(empty)
+#unset_field	-
+#path	http
+#open	2026-10-15-00-07-11
+#fields	ts	uid	id.orig_h	id.orig_p	id.resp_h	id.resp_p	trans_depth	method	host	uri	referrer	version	user_agent	origin	request_body_len	response_body_len	status_code	status_msg	info_code	info_msg	tags	username	password	proxied	orig_fuids	orig_filenames	orig_mime_types	resp_fuids	resp_filenames	resp_mime_types
+#types	time	string	addr	port	addr	port	count	string	string	string	string	string	string	string	count	count	count	string	count	string	set[enum]	string	string	set[string]	vector[string]	vector[string]	vector[string]	vector[string]	vector[string]	vector[string]
+1790882847.800770	CICCxV3ahm955yufBh	10.10.1.128	49670	23.219.87.72	80	1	GET	www.msftconnecttest.com	/connecttest.txt	-	1.1	Microsoft NCSI	-	0	22	200	OK	-	-	(empty)	-	-	-	-	-	-	FM52Kw2aiu2B853WKg	-	text/plain
+1790882884.106732	CGPsMC4ODMvasWjJld	10.10.1.128	62164	150.171.29.11	80	1	GET	edge.microsoft.com	/browsernetworktime/time/1/current?cup2key=2:O8RYa-06I_3i7skWhHQ_AOmcesBjj_7ZBdPr_gSHFNw&cup2hreq=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855	-	1.1	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0	-	0	80	200	OK	-	-	(empty)	-	-	-	-	-	-	FNMqoR1S11AO1m75x3	'json.txt'	text/plain
+1790882940.304308	CY9KvqLmeg0lJvrg4	10.10.1.128	63969	35.170.55.9	80	1	GET	holtandberyl.com	/prw	-	1.1	curl/8.21.0	-	0	178	301	Moved Permanently	-	-	(empty)	-	-	-	-	-	-	FfFHtVZVyIAp2dpB6	-	text/html
+1790882941.737924	C5Onty4Mu2nPA2YmPa	10.10.1.128	63971	35.170.55.9	80	1	GET	holtandberyl.com	/crv	-	1.1	curl/8.21.0	-	0	178	301	Moved Permanently	-	-	(empty)	-	-	-	-	-	-	FVCzJXNAge98Lzsb	-	text/html
+1790882942.258994	CqTNz82QvZlAjCN7Rb	10.10.1.128	63973	184.29.91.124	80	1	GET	x2.c.lencr.org	/	-	1.1	Microsoft-CryptoAPI/10.0	-	0	355	200	OK	-	-	(empty)	-	-	-	-	-	-	FDn8qiEHIZk0YVMtj	-	-
+1790882942.394821	Ctre2E3Q4pZngfBqCk	10.10.1.128	63974	23.201.96.193	80	1	GET	ye.c.lencr.org	/	-	1.1	Microsoft-CryptoAPI/10.0	-	0	283	200	OK	-	-	(empty)	-	-	-	-	-	-	F2vkcq8lsHIwrkM7	-	-
+1790882942.544006	C86THjNbs4lXqVQv9	10.10.1.128	63975	104.18.20.213	80	1	GET	ye2.c.lencr.org	/42.crl	-	1.1	Microsoft-CryptoAPI/10.0	-	0	57019	200	OK	-	-	(empty)	-	-	-	-	-	-	FoKYGU8ke11qzVyMk	-	-
+1790883029.475486	CsyPOV4IN2vjDWbo4	10.10.1.128	63720	23.11.33.159	80	1	GET	ocsp.digicert.com	/MFEwTzBNMEswSTAJBgUrDgMCGgUABBQ50otx/h0Ztl+z8SiPI7wEWVxDlQQUTiJUIBiV5uNu5g/6+rkS7QYXjzkCEAsMayxGaRewR3PGR9SvwMg=	-	1.1	Microsoft-CryptoAPI/10.0	-	0	471	200	OK	-	-	(empty)	-	-	-	-	-	-	FIc3iX2cSD5QHl9Avj	-	application/ocsp-response
+1790883029.645183	CiMDpT2PQKEQtwN6H	10.10.1.128	63721	204.79.197.203	80	1	GET	oneocsp.microsoft.com	/ocsp/MFQwUjBQME4wTDAJBgUrDgMCGgUABBR0TBEVYklX7A9yLoLD9hqmCWDxFgQU3pGGSLehMVkx8UtfB6nciHnaqHYCEzMAAAAMSWShb0QgOyIAAAAAAAw=	-	1.1	Microsoft-CryptoAPI/10.0	-	0	1761	200	OK	-	-	(empty)	-	-	-	-	-	-	FD9aJ11vWFcYpgXBM	-	application/ocsp-response
+1790883036.806810	CS6YxQ2qgf2dHJqfSl	10.10.1.128	63723	107.175.82.242	9000	1	GET	107.175.82.242:9000	/wilow/runner_ilove.exe	-	1.1	curl/8.21.0	-	0	1646592	200	OK	-	-	(empty)	-	-	-	-	-	-	Fj9Cup2ZicNmN9Gp3	-	application/x-dosexec
+1790883064.645831	Cc4fRZqNwLAaQIH7c	10.10.1.128	63726	172.64.149.23	80	1	GET	crt.sectigo.com	/SectigoPublicCodeSigningRootR46.p7c	-	1.1	Microsoft-CryptoAPI/10.0	-	0	4515	200	OK	-	-	(empty)	-	-	-	-	-	-	FBDUZQ35eu7SkSkIgi	-	-
+1790883590.643450	CN8tZ04zGivQFeYTcd	10.10.1.128	63740	23.213.232.136	80	1	GET	acroipm2.adobe.com	/assets/Owner/arm/ProcessMAU.txt	-	1.1	Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.2; WOW64; Trident/7.0; .NET4.0C; .NET4.0E; .NET CLR 2.0.50727; .NET CLR 3.0.30729; .NET CLR 3.5.30729)	-	0	0	304	Not Modified	-	-	(empty)	-	-	-	-	-	-	-	-	-
+1790883653.293478	C8srTUGgXXwCXO1qf	10.10.1.128	63745	184.29.91.124	80	1	GET	x1.c.lencr.org	/	-	1.1	Microsoft-CryptoAPI/10.0	-	0	0	304	Not Modified	-	-	(empty)	-	-	-	-	-	-	-	-	-
+1790883653.578136	CzSyfY2P5u72Y6dWTg	10.10.1.128	63746	23.201.96.205	80	1	GET	yr.c.lencr.org	/	-	1.1	Microsoft-CryptoAPI/10.0	-	0	0	304	Not Modified	-	-	(empty)	-	-	-	-	-	-	-	-	-
+1790883680.802454	CNfJuJ2gK04xgxyi6b	10.10.1.128	63747	199.232.214.172	80	1	GET	ctldl.windowsupdate.com	/msdownload/update/v3/static/trustedr/en/pinrulesstl.cab?46aaf5d89671b3f2	-	1.1	Microsoft-CryptoAPI/10.0	-	0	0	304	Not Modified	-	-	(empty)	-	-	-	-	-	-	-	-	-
+1790884575.015486	CUTo46OX4QaKsWpf1	10.10.1.128	63756	199.232.214.172	80	1	GET	ctldl.windowsupdate.com	/msdownload/update/v3/static/trustedr/en/disallowedcertstl.cab?e490687ed75f9e75	-	1.1	Microsoft-CryptoAPI/10.0	-	0	0	304	Not Modified	-	-	(empty)	-	-	-	-	-	-	-	-	-
+#close	2026-10-15-00-07-25

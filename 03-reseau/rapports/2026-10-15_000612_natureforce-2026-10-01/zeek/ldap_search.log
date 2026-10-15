@@ -1,0 +1,37 @@
+#separator \x09
+#set_separator	,
+#empty_field	(empty)
+#unset_field	-
+#path	ldap_search
+#open	2026-10-15-00-07-11
+#fields	ts	uid	id.orig_h	id.orig_p	id.resp_h	id.resp_p	message_id	scope	deref_aliases	base_object	result_count	result	diagnostic_message	filter	attributes
+#types	time	string	addr	port	addr	port	int	string	string	string	count	string	string	string	vector[string]
+1790882847.434866	CZbOXnXJV5oLhd3wl	10.10.1.128	51650	10.10.1.10	389	1	base	never	-	1	success	-	(&(&(&(&(DnsDomain=natureforce.com)(Host=DESKTOP-4VGYQX7))(DomainGuid=ac8ae877-e7fb-4692-890e-8b5ea1d03cb0))(NtVer=0x20000016))(DnsHostName=DESKTOP-4VGYQX7.natureforce.com))	-
+1790882847.500280	CRH88ROtm1XCPwH49	10.10.1.128	49667	10.10.1.10	389	2	base	never	-	1	success	-	(objectclass=*)	-
+1790882847.501542	CNnxk13t2X3SmR5Ul2	10.10.1.128	55186	10.10.1.10	389	3	base	never	-	1	success	-	(&(&(&(&(DnsDomain=natureforce.com)(Host=DESKTOP-4VGYQX7))(DomainGuid=ac8ae877-e7fb-4692-890e-8b5ea1d03cb0))(NtVer=0x20000016))(DnsHostName=DESKTOP-4VGYQX7.natureforce.com))	-
+1790882847.592140	CsZJxX2RpBnzmXMil2	10.10.1.128	55188	10.10.1.10	389	1	base	never	-	1	success	-	(&(&(&(&(DnsDomain=natureforce.com)(Host=DESKTOP-4VGYQX7))(DomainGuid=ac8ae877-e7fb-4692-890e-8b5ea1d03cb0))(NtVer=0x00000016))(DnsHostName=DESKTOP-4VGYQX7.natureforce.com))	-
+1790882847.791847	C3u5ar1Cf0cQ2XnLc8	10.10.1.128	56537	10.10.1.10	389	1	base	never	-	1	success	-	(&(&(&(&(&(DnsDomain=natureforce.com.)(Host=DESKTOP-4VGYQX7))(DomainSid=S-1-5-21-408266568-3947399335-3725113099))(DomainGuid=ac8ae877-e7fb-4692-890e-8b5ea1d03cb0))(NtVer=0x00000016))(DnsHostName=DESKTOP-4VGYQX7.natureforce.com))	-
+1790882847.791845	C3u5ar1Cf0cQ2XnLc8	10.10.1.128	56537	10.10.1.10	389	2	base	never	-	1	success	-	(&(&(&(&(DnsDomain=natureforce.com)(Host=DESKTOP-4VGYQX7))(DomainGuid=ac8ae877-e7fb-4692-890e-8b5ea1d03cb0))(NtVer=0x20000016))(DnsHostName=DESKTOP-4VGYQX7.natureforce.com))	-
+1790882847.791848	C3u5ar1Cf0cQ2XnLc8	10.10.1.128	56537	10.10.1.10	389	3	base	never	-	1	success	-	(&(&(&(&(&(&(DnsDomain=natureforce.com)(Host=DESKTOP-4VGYQX7))(User=DESKTOP-4VGYQX7$))(AAC=80:00:00:00))(DomainGuid=ac8ae877-e7fb-4692-890e-8b5ea1d03cb0))(NtVer=0x00000016))(DnsHostName=DESKTOP-4VGYQX7.natureforce.com))	-
+1790882847.976192	CmK66y3EGX6jxZXxO7	10.10.1.128	49678	10.10.1.10	389	4	base	never	-	1	success	-	(objectclass=*)	-
+1790882847.988515	C3u5ar1Cf0cQ2XnLc8	10.10.1.128	56537	10.10.1.10	389	9	base	never	-	1	success	-	(&(&(&(DnsDomain=ForestDnsZones.natureforce.com)(Host=DESKTOP-4VGYQX7))(NtVer=0x20000016))(DnsHostName=DESKTOP-4VGYQX7.natureforce.com))	-
+1790882848.098732	CpXjmT3sFLEY0AiBTa	10.10.1.128	56540	10.10.1.10	389	10	base	never	-	1	success	-	(&(&(&(DnsDomain=DomainDnsZones.natureforce.com)(Host=DESKTOP-4VGYQX7))(NtVer=0x20000016))(DnsHostName=DESKTOP-4VGYQX7.natureforce.com))	-
+1790882848.212314	Cl8QMP3Q3bty5P1At8	10.10.1.128	56541	10.10.1.10	389	11	base	never	-	1	success	-	(&(&(&(&(DnsDomain=natureforce.com)(Host=DESKTOP-4VGYQX7))(DomainGuid=ac8ae877-e7fb-4692-890e-8b5ea1d03cb0))(NtVer=0x20000016))(DnsHostName=DESKTOP-4VGYQX7.natureforce.com))	-
+1790882848.568950	CKml9JIEEvSW2O1Aj	10.10.1.128	49692	10.10.1.10	389	1	base	never	-	1	success	-	(objectclass=*)	-
+1790882849.570334	CpV6ladzlw27p5vS8	10.10.1.128	53108	10.10.1.10	389	14	base	never	-	1	success	-	(&(&(&(&(DnsDomain=natureforce.com.)(Host=DESKTOP-4VGYQX7))(DomainGuid=ac8ae877-e7fb-4692-890e-8b5ea1d03cb0))(NtVer=0x00000016))(DnsHostName=DESKTOP-4VGYQX7.natureforce.com))	-
+1790882849.731918	CJdJPSp2gaa65e37	10.10.1.128	49707	10.10.1.10	389	1	base	never	-	1	success	-	(objectclass=*)	-
+1790882853.292128	CdwCAl3FODrxofhJK6	10.10.1.128	63306	10.10.1.10	389	15	base	never	-	1	success	-	(&(&(&(&(DnsDomain=natureforce.com.)(Host=DESKTOP-4VGYQX7))(DomainGuid=ac8ae877-e7fb-4692-890e-8b5ea1d03cb0))(NtVer=0x00000016))(DnsHostName=DESKTOP-4VGYQX7.natureforce.com))	-
+1790882857.967489	CDRLwU1yRnhWFSsC6g	10.10.1.128	63308	10.10.1.10	389	16	base	never	-	1	success	-	(&(&(&(&(DnsDomain=natureforce.com.)(Host=DESKTOP-4VGYQX7))(DomainGuid=ac8ae877-e7fb-4692-890e-8b5ea1d03cb0))(NtVer=0x20000016))(DnsHostName=DESKTOP-4VGYQX7.natureforce.com))	-
+1790882858.070352	CZL6MR1SONsPidk9B6	10.10.1.128	49715	10.10.1.10	389	1	base	never	-	1	success	-	(objectclass=*)	-
+1790882866.138174	CZBsDhi6eXcBf3lt1	10.10.1.128	52983	10.10.1.10	389	17	base	never	-	1	success	-	(&(&(&(&(DnsDomain=natureforce.com.)(Host=DESKTOP-4VGYQX7))(DomainGuid=ac8ae877-e7fb-4692-890e-8b5ea1d03cb0))(NtVer=0x20000016))(DnsHostName=DESKTOP-4VGYQX7.natureforce.com))	-
+1790882926.961080	C1Ldnt4eOCJNQSPkJf	10.10.1.128	63602	10.10.1.10	389	18	base	never	-	1	success	-	(&(&(&(&(DnsDomain=natureforce.com.)(Host=DESKTOP-4VGYQX7))(DomainGuid=ac8ae877-e7fb-4692-890e-8b5ea1d03cb0))(NtVer=0x00000016))(DnsHostName=DESKTOP-4VGYQX7.natureforce.com))	-
+1790882927.094018	CB1Cfn4V1CtxY1WMD3	10.10.1.128	57951	10.10.1.10	389	1	base	never	-	1	success	-	(objectclass=*)	-
+1790883140.639991	CDVV8o2p7DyJ6C9jBf	10.10.1.128	63727	10.10.1.10	389	1	base	never	-	1	success	-	(objectclass=*)	-
+1790883159.501627	C9iUg63b8YwcPUE6xa	10.10.1.128	63732	10.10.1.10	389	1	base	never	-	1	success	-	(objectclass=*)	-
+1790883168.097965	CpInVp1UEQpodoLzJf	10.10.1.128	63737	10.10.1.10	389	1	base	never	-	1	success	-	(objectclass=*)	-
+1790884502.840847	CBFnDY2htSL6AI2pL2	10.10.1.128	62173	10.10.1.10	389	19	base	never	-	1	success	-	(&(&(&(&(DnsDomain=natureforce.com.)(Host=DESKTOP-4VGYQX7))(DomainGuid=ac8ae877-e7fb-4692-890e-8b5ea1d03cb0))(NtVer=0x00000016))(DnsHostName=DESKTOP-4VGYQX7.natureforce.com))	-
+1790884502.968370	C4REBy18xidIffKQo3	10.10.1.128	63753	10.10.1.10	389	1	base	never	-	1	success	-	(objectclass=*)	-
+1790884959.854190	Cz0aJf2xcStOfdoe9b	10.10.1.128	61495	10.10.1.10	389	20	base	never	-	1	success	-	(&(&(&(&(DnsDomain=natureforce.com.)(Host=DESKTOP-4VGYQX7))(DomainGuid=ac8ae877-e7fb-4692-890e-8b5ea1d03cb0))(NtVer=0x20000016))(DnsHostName=DESKTOP-4VGYQX7.natureforce.com))	-
+1790884959.956894	CC6dR02suS3LETdzzh	10.10.1.128	63768	10.10.1.10	389	1	base	never	-	1	success	-	(objectclass=*)	-
+1790885143.196623	CTK1m3yuLMkJnYnR6	10.10.1.128	63774	10.10.1.10	389	1	base	never	-	1	success	-	(objectclass=*)	-
+#close	2026-10-15-00-07-25

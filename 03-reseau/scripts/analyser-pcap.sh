@@ -164,6 +164,25 @@ set +e +o pipefail
         zeek-cut note msg < "$SORTIE/zeek/notice.log" | sort | uniq -c | sort -rn | head -20 \
             | awk -F'\t' '{split($1,a," "); printf "- %s × `%s` — %s\n", a[1], a[2], $2}'
     fi
+    if [[ -f "$CONN" ]]; then
+        echo
+        echo "### Port 443 sans TLS ni QUIC, plus d'une minute"
+        echo
+        echo "Le port 443 est celui du HTTPS : un flux long qui ne parle ni TLS ni QUIC s'y cache"
+        echo "(cas NetSupport, HTTP en clair ; cas Natureforce, protocole propre au RAT)."
+        echo
+        lignes="$(zeek-cut ts id.orig_h id.resp_h id.resp_p service duration orig_bytes resp_bytes < "$CONN" \
+            | awk -F'\t' '$4==443 && $5!~/ssl|quic/ && $6>60')"
+        if [[ -z "$lignes" ]]; then
+            echo "Aucun."
+        else
+            echo "| Début (UTC) | Source | Destination | Service | Durée | Envoyé (o) | Reçu (o) |"
+            echo "|---|---|---|---|---|---|---|"
+            echo "$lignes" | while IFS=$'\t' read -r ts o r p sv d ob rb; do
+                echo "| $(date -u -d @"${ts%.*}" '+%F %T') | $o | $r | \`$sv\` | ${d%.*} s | $ob | $rb |"
+            done
+        fi
+    fi
     echo
     echo "## Balisement — connexions (conn.log)"
     echo

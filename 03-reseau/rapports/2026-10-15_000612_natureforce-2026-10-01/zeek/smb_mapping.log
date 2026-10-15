@@ -1,0 +1,15 @@
+#separator \x09
+#set_separator	,
+#empty_field	(empty)
+#unset_field	-
+#path	smb_mapping
+#open	2026-10-15-00-07-11
+#fields	ts	uid	id.orig_h	id.orig_p	id.resp_h	id.resp_p	path	service	native_file_system	share_type
+#types	time	string	addr	port	addr	port	string	string	string	string
+1790882848.036950	Cworef4WfEDA8ozOx6	10.10.1.128	49669	10.10.1.10	445	\\\\WIN-LEKBU2OY51N.natureforce.com\\IPC$	-	-	PIPE
+1790882848.632609	Cworef4WfEDA8ozOx6	10.10.1.128	49669	10.10.1.10	445	\\\\WIN-LEKBU2OY51N.natureforce.com\\sysvol	-	-	DISK
+1790882849.049342	Cworef4WfEDA8ozOx6	10.10.1.128	49669	10.10.1.10	445	\\\\WIN-LEKBU2OY51N.natureforce.com\\IPC$	-	-	PIPE
+1790882866.394587	CJTXDt1SrOdEf6fTZ8	10.10.1.128	49728	10.10.1.10	445	\\\\WIN-LEKBU2OY51N\\Shared	-	-	DISK
+1790883748.551725	Cf8NOp4uKHD0GvVtIk	10.10.1.128	63748	10.10.1.10	445	\\\\WIN-LEKBU2OY51N.natureforce.com\\IPC$	-	-	PIPE
+1790884648.580976	CnY0QEfYMDuMB4dWj	10.10.1.128	63758	10.10.1.10	445	\\\\WIN-LEKBU2OY51N.natureforce.com\\IPC$	-	-	PIPE
+#close	2026-10-15-00-07-25
