@@ -12,21 +12,22 @@ et dans `preuves/` ce qu'on a réellement fait.
 
 ## Phase 0 — La place sur l'hôte
 
-L'hôte a **16 Go de RAM** et son disque a déjà fait tomber une VM au module 03. Avant tout :
+L'hôte a **24 Go de RAM** et son disque a déjà fait tomber une VM au module 03. Avant tout :
 
 ```powershell
 [math]::Round((Get-PSDrive C).Free/1GB,1)      # objectif : au moins 60 Go libres
 ```
 
-Libérer la place en retirant `srv-wazuh` (44 Go, doublon d'Elastic) : VM éteinte, **Manage →
-Delete from Disk** dans VMware, ou dossier déplacé sur un disque externe.
+Libérer la place en **déplaçant** `srv-wazuh` (44 Go) sur un autre disque : VM éteinte, dossier
+copié, VM rouverte depuis son nouvel emplacement (réponse « I Moved It »), démarrage vérifié, puis
+seulement l'ancien dossier retiré du disque C:.
 
 ## Phase 1 — La VM siem
 
 | Réglage | Valeur | Pourquoi |
 |---|---|---|
 | Système | Ubuntu Server **26.04.1 LTS**, OpenSSH, aucun snap | même base que la sonde |
-| Ressources | **6 Go** de RAM, **2 processeurs** (4 si possible), **60 Go** alloués à la demande | Elasticsearch (tas 2 Go) + Kibana + Fleet Server |
+| Ressources | **8 Go** de RAM, **4 processeurs**, **60 Go** alloués à la demande | Elasticsearch (tas 4 Go) + Kibana + Fleet Server |
 | Carte 1 | **Réseau hôte uniquement**, adresse fixe `192.168.234.20/24` | le réseau du lab, permanent |
 | Carte 2 | **NAT**, branchée seulement pendant les installations | paquets, intégrations et règles viennent d'Elastic |
 
@@ -67,7 +68,7 @@ sudo /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic -i
 **Le tas de la JVM** — fixé, pas laissé au calcul automatique :
 
 ```bash
-printf -- '-Xms2g\n-Xmx2g\n' | sudo tee /etc/elasticsearch/jvm.options.d/heap.options
+printf -- '-Xms4g\n-Xmx4g\n' | sudo tee /etc/elasticsearch/jvm.options.d/heap.options
 ```
 
 Dans `/etc/elasticsearch/elasticsearch.yml` : `cluster.name: detection-lab`,
@@ -128,8 +129,8 @@ Instantané **« siem installée hors ligne »**, VM éteinte.
 
 ## Phase 4 — La source poste : la VM Windows
 
-VM Windows : instantané « VM outillée hors ligne — module 02 », **4 Go de RAM**, carte en réseau
-hôte uniquement. La sonde reste éteinte.
+VM Windows : instantané « VM outillée hors ligne — module 02 », **6 Go de RAM**, carte en réseau
+hôte uniquement. La sonde peut rester éteinte : elle ne sert qu'à partir de la phase 6.
 
 1. Politique d'agent **« poste-windows »** dans Fleet : intégrations **Windows** (Sysmon +
    PowerShell) et **System** (Sécurité, Système).
@@ -182,8 +183,8 @@ voit quoi : c'est la colonne « Elastic » de la matrice.
 
 ## Phase 6 — La source réseau : la sonde
 
-Sonde à **2 Go de RAM**, carte en réseau hôte uniquement (`192.168.234.10`). La VM Windows reste
-éteinte.
+Sonde à **3 Go de RAM**, carte en réseau hôte uniquement (`192.168.234.10`). La VM Windows peut
+rester éteinte : les données réseau de cette phase viennent des pcaps du module 03.
 
 1. **Zeek en JSON** : l'intégration d'Elastic ne lit pas le format TSV. On relit les captures du
    module 03 avec `LogAscii::use_json=T`, dans un dossier que l'agent surveille

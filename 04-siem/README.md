@@ -93,7 +93,7 @@ la fois ; sur `logs-zeek.*`, seulement Zeek.
 
 **La mémoire** est la contrainte principale : Elasticsearch tourne dans une JVM dont on fixe la
 taille du tas (*heap*). Règle d'usage : la moitié de la RAM de la machine, sans dépasser ce que
-le reste (Kibana, Fleet Server) laisse libre. Ici, **2 Go de tas sur une VM de 6 Go**.
+le reste (Kibana, Fleet Server) laisse libre. Ici, **4 Go de tas sur une VM de 8 Go**.
 
 ### Kibana et l'application Security — l'atelier de l'analyste
 
@@ -223,17 +223,18 @@ flowchart TB
 
 | VM | RAM | Disque | Rôle |
 |---|---|---|---|
-| **siem** (nouvelle) | **6 Go** | 60 Go, alloué à la demande | Elasticsearch (tas 2 Go), Kibana, Fleet Server |
-| Windows 11 du lab | **4 Go** pendant ce module | existant | source poste |
-| sonde | **2 Go** pendant ce module | existant | source réseau |
+| **siem** (nouvelle) | **8 Go** | 60 Go, alloué à la demande | Elasticsearch (tas 4 Go), Kibana, Fleet Server |
+| Windows 11 du lab | **6 Go** pendant ce module | existant | source poste |
+| sonde | **3 Go** pendant ce module | existant | source réseau |
 
-**L'hôte a 16 Go de RAM** : on ne fait **jamais tourner les trois VM ensemble**. Phase poste :
-siem + Windows (10 Go). Phase réseau : siem + sonde (8 Go). Il reste ainsi 6 à 8 Go à Windows
-hôte.
+**L'hôte a 24 Go de RAM** : les trois VM peuvent tourner **ensemble** (17 Go), en laissant 7 Go
+à Windows hôte. C'est ce qui rend possible la corrélation en direct du poste au réseau (phase 7) :
+la sonde écoute pendant que la VM Windows est attaquée. Hors de cette phase, on n'allume que ce
+qui sert.
 
 **Le disque de l'hôte** a déjà fait tomber une VM au module 03 (écran bleu 0x124). Avant de créer
-la VM siem : **au moins 60 Go libres**, obtenus en retirant la VM `srv-wazuh` (44 Go), qui fait
-doublon avec Elastic.
+la VM siem : **au moins 60 Go libres** sur le disque qui l'accueille, obtenus en déplaçant la VM
+`srv-wazuh` (44 Go) sur un autre disque — elle reste disponible pour d'autres travaux.
 
 ---
 
@@ -273,7 +274,7 @@ doublon avec Elastic.
 
 ## Ordre des opérations
 
-1. **Libérer le disque** de l'hôte et créer la VM siem (Ubuntu Server 26.04, 6 Go, 60 Go).
+1. **Libérer le disque** de l'hôte et créer la VM siem (Ubuntu Server 26.04, 8 Go, 60 Go).
 2. **Installer** Elasticsearch puis Kibana 9.5.x depuis le dépôt de paquets d'Elastic ; noter
    les versions ; mettre les mots de passe dans le gestionnaire.
 3. **Fleet** : installer Fleet Server, puis les intégrations Windows, Zeek et Suricata, et les
@@ -315,7 +316,7 @@ doublon avec Elastic.
 **Un seul nœud Elasticsearch.** Pas de réplication, pas de haute disponibilité : un SIEM de
 laboratoire, pas de production.
 
-**Peu de mémoire.** 6 Go pour toute la pile : les requêtes lourdes seront lentes, et c'est une
+**Peu de mémoire.** 8 Go pour toute la pile : les requêtes lourdes seront lentes, et c'est une
 contrainte réelle de dimensionnement à documenter, pas à cacher.
 
 **Des données historiques pour le réseau.** Les pcaps datent de janvier à octobre 2026 ; ils
