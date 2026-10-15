@@ -202,9 +202,14 @@ l'ouverture du flux — compatible avec une résolution chiffrée du C2, sans le
 **Balisement — non applicable.** Une connexion ne fait pas une série, et sans HTTP il n'y a pas de
 requêtes à mesurer. Avec `--externes-seulement` et la référence normale : 0 paire évaluée.
 
+**L'étape d'avant.** À 19:28:59, **`curl/8.21.0`** demande déjà `holtandberyl.com/prw` puis
+`/crv`, redirigé vers HTTPS : deux téléchargements dont on ne voit que le nom du serveur, et
+qu'aucune signature ne relève. Zeek, lui, les montre dans `http.log`. `pe.log` décrit l'exécutable
+livré ensuite : PE 64 bits, **non signé**, date de compilation **2059** (falsifiée).
+
 **Ce que personne ne voit.** Ce que contiennent les 13,4 Mo reçus — modules, charge
-supplémentaire, ordres : le protocole n'est pas décodé et on ne l'extrait pas. Et l'étape d'avant
-la commande `curl` : la capture commence avec elle.
+supplémentaire, ordres : le protocole n'est pas décodé et on ne l'extrait pas. Ni ce que `curl`
+a récupéré en HTTPS depuis `holtandberyl.com`.
 
 **Ce qui comble le trou.** Le critère « port 443, ni TLS ni QUIC, plus d'une minute » donne
 **1** sur Natureforce, **1** sur NetSupport, **0** sur Lumma, **0** sur le trafic normal. Il est
