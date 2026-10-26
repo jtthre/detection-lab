@@ -121,30 +121,165 @@ curl --cacert ~/http_ca.crt -u elastic "https://localhost:9200/_cluster/health?p
 Constat du 15/10 : Kibana s'ouvre depuis l'hôte (`http://192.168.234.20:5601`), cluster **green**,
 51 partitions primaires actives, 0 non assignée. Instantané **« phase 2 : Elastic + Kibana »**.
 
-## Phase 3 — Fleet, intégrations et règles Elastic (carte NAT encore branchée)
+## Phase 3 — Fleet Server, intégrations et règles Elastic (carte NAT encore branchée)
 
-Dans Kibana (`http://<adresse NAT>:5601` depuis l'hôte, puis `192.168.234.20` ensuite) :
+### 3a — Deux corrections avant Fleet
 
-1. **Fleet → Paramètres** : hôte Fleet Server `https://192.168.234.20:8220` ; sortie
-   Elasticsearch `https://192.168.234.20:9200` avec l'empreinte de l'autorité de certification
-   (`openssl x509 -fingerprint -sha256 -noout -in ~/http_ca.crt`).
-2. **Ajouter Fleet Server** sur la VM siem-elastic (mode démarrage rapide) : Kibana génère la commande
-   d'installation de l'agent, avec un jeton de service. Elle se lance telle quelle sur la VM siem-elastic.
-3. **Intégrations** : installer les ressources de **Windows**, **System**, **Zeek** et
-   **Suricata** (onglet Paramètres de chaque intégration).
-4. **Security → Règles → Ajouter les règles Elastic** : installer le paquet de règles prêtes à
-   l'emploi. **N'en activer aucune pour l'instant.**
-5. **Agents pour les autres VM** : télécharger sur la VM siem-elastic, dans `~/agents/`, les archives
-   d'Elastic Agent de la **même version** pour Linux (`.tar.gz`) et Windows (`.zip`). Les VM
-   du lab les récupéreront par `scp` depuis la siem : elles n'ont pas besoin d'Internet.
-
-Puis **débrancher la carte NAT** (VMware → Network Adapter 2 → décocher *Connected*), et :
+**Kibana joignait Elasticsearch par la carte NAT.** Le jeton d'inscription de la phase 2 a inscrit
+`elasticsearch.hosts: [https://192.168.64.140:9200]` : débrancher la carte NAT aurait coupé Kibana.
+Le certificat HTTP d'Elasticsearch couvre `192.168.234.20` (vérifié avec `openssl s_client … |
+openssl x509 -noout -ext subjectAltName`), on corrige donc, et on limite Elasticsearch au lab :
 
 ```bash
-cd ~/detection-lab/04-siem && ./scripts/verifier-siem.sh
+sudo sed -i 's|192.168.64.140|192.168.234.20|' /etc/kibana/kibana.yml
+sudo sed -i 's|^http.host: 0.0.0.0|http.host: [_local_, "192.168.234.20"]|' /etc/elasticsearch/elasticsearch.yml
+sudo systemctl restart elasticsearch && sudo systemctl restart kibana
+sudo ss -ltnp | grep -E ':9200|:5601'      # 9200 sur .20, 127.0.0.1, ::1 ; 5601 sur .20
 ```
 
-Instantané **« siem-elastic installée hors ligne »**, VM éteinte.
+**Une autorité de certification du lab pour Fleet Server.** Le *Quick Start* de Kibana donne à
+Fleet Server un certificat auto-signé : chaque agent devrait alors s'inscrire avec `--insecure`.
+On signe plutôt un certificat pour `192.168.234.20` avec une autorité propre au lab.
+`elasticsearch-certutil` résout les chemins relatifs dans **son** dossier
+(`/usr/share/elasticsearch`) : chemins absolus obligatoires.
+
+```bash
+mkdir -p ~/fleet-certs && cd ~/fleet-certs
+sudo /usr/share/elasticsearch/bin/elasticsearch-certutil ca --pem --days 730 --out "$PWD/ca.zip" && sudo unzip -o ca.zip
+sudo /usr/share/elasticsearch/bin/elasticsearch-certutil cert --pem --ca-cert "$PWD/ca/ca.crt" --ca-key "$PWD/ca/ca.key" \
+  --name fleet-server --ip 192.168.234.20 --dns siem-elastic --days 730 --out "$PWD/fleet-server.zip" && sudo unzip -o fleet-server.zip
+sudo chown -R mthiore: ~/fleet-certs && chmod 600 ca/ca.key fleet-server/fleet-server.key
+sudo install -d -m 750 /etc/fleet-server-certs
+sudo install -m 644 ca/ca.crt fleet-server/fleet-server.crt ~/http_ca.crt /etc/fleet-server-certs/
+sudo install -m 600 fleet-server/fleet-server.key /etc/fleet-server-certs/
+openssl x509 -fingerprint -sha256 -noout -in ~/http_ca.crt | cut -d= -f2 | tr -d ':'   # empreinte pour Fleet
+```
+
+Les clés privées (`ca.key`, `fleet-server.key`) ne quittent pas la siem et ne vont pas dans le
+dépôt. Seul `ca.crt` (public) part avec les agents.
+
+### 3b — Fleet Server
+
+1. **Fleet → Paramètres** : hôte Fleet Server `https://192.168.234.20:8220` (par défaut) ;
+   sortie `default` sur `https://192.168.234.20:9200` avec l'empreinte de l'étape précédente.
+2. **Ajouter un serveur Fleet → Advanced**, mode **Production**, politique
+   `fleet-server-policy`, *Générer un token de service*. Plateforme **Linux x86_64** (l'assistant
+   a proposé `arm64` par défaut).
+3. **Le jeton de service est un secret** : on le copie avec l'icône de copie et il passe au
+   terminal sans s'afficher.
+
+```bash
+cd ~ && curl -L -O https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-9.5.5-linux-x86_64.tar.gz
+tar xzf elastic-agent-9.5.5-linux-x86_64.tar.gz
+read -rsp "Jeton de service : " FLEET_TOKEN && echo        # seule, collage du jeton
+cd ~/elastic-agent-9.5.5-linux-x86_64 && sudo ./elastic-agent install \
+  --url=https://192.168.234.20:8220 \
+  --fleet-server-es=https://192.168.234.20:9200 \
+  --fleet-server-service-token="$FLEET_TOKEN" \
+  --fleet-server-policy=fleet-server-policy \
+  --fleet-server-es-ca-trusted-fingerprint=<empreinte> \
+  --certificate-authorities=/etc/fleet-server-certs/ca.crt \
+  --fleet-server-cert=/etc/fleet-server-certs/fleet-server.crt \
+  --fleet-server-cert-key=/etc/fleet-server-certs/fleet-server.key \
+  --fleet-server-port=8220 \
+  --install-servers ; unset FLEET_TOKEN
+```
+
+**Incident du 16/10** : un premier essai (Quick Start, `arm64`, espaces après `=`) a fait
+apparaître un jeton complet sur une capture d'écran. Les deux jetons émis ont été **révoqués**
+(Outils de développement) avant de recommencer :
+
+```
+GET _security/service/elastic/fleet-server/credential
+DELETE _security/service/elastic/fleet-server/credential/token/<nom>
+```
+
+Contrôles :
+
+```bash
+sudo elastic-agent status          # fleet HEALTHY Connected, elastic-agent HEALTHY
+openssl s_client -connect 192.168.234.20:8220 -CAfile ~/fleet-certs/ca/ca.crt -brief </dev/null
+# Peer certificate: CN=fleet-server — Verification: OK — TLSv1.3
+```
+
+**Pare-feu.** Fleet Server écoutait sur `*:8220` et l'intégration Fleet Server 1.6.1 n'a plus de
+champ « Hôte ». On ferme donc la carte NAT au niveau du système, une règle pour tous les services :
+
+```bash
+sudo ufw default deny incoming && sudo ufw default allow outgoing
+sudo ufw allow in on ens33 to any port 22 proto tcp
+sudo ufw allow in on ens33 to any port 5601,8220,9200 proto tcp
+sudo ufw enable
+```
+
+9200 reste ouvert sur le lab : les agents envoient leurs données **directement** à Elasticsearch.
+
+### 3c — Ce qui demande Internet
+
+1. **Ressources des intégrations** (Intégrations → *nom* → Paramètres → Installer les
+   ressources) : Windows, System, Zeek, Suricata. Aucune n'est ajoutée à une politique avant
+   les phases 4 et 6.
+2. **Règles Elastic** (Security → Règles → Ajouter les règles Elastic → Installer toutes) :
+   elles arrivent désactivées… **sauf deux**, qu'Elastic active d'office :
+   *Endpoint Security (Elastic Defend)* et *Container Workload Protection*. On les désactive :
+   **0 règle active** au départ, chaque activation sera un choix justifié.
+3. **Listes de valeurs de Security** : le premier passage dans Security crée `.lists-default` et
+   `.items-default`, dont le modèle n'hérite pas de `logs@custom` → cluster jaune. Correction
+   ciblée (0 réplica sur un nœud, 1 s'il en vient un second) :
+
+   ```
+   PUT .lists-default,.items-default/_settings
+   { "index.auto_expand_replicas": "0-1" }
+   ```
+
+4. **Agents pour les autres VM**, vérifiés avant usage :
+
+   ```bash
+   mkdir -p ~/agents && cd ~/agents
+   curl -L -O https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-9.5.5-windows-x86_64.zip
+   curl -L -O https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-9.5.5-windows-x86_64.zip.sha512
+   curl -L -O https://artifacts.elastic.co/downloads/beats/elastic-agent/elastic-agent-9.5.5-linux-x86_64.tar.gz.sha512
+   mv ~/elastic-agent-9.5.5-linux-x86_64.tar.gz . && sha512sum -c *.sha512
+   cp ~/fleet-certs/ca/ca.crt ~/agents/fleet-ca.crt
+   ```
+
+5. **Clé d'API en lecture seule** pour `verifier-siem.sh`. On ne devine pas les noms des
+   privilèges Kibana : on crée un rôle `verificateur-siem` dans l'interface (cluster `monitor` ;
+   `logs-*` en `read` + `view_index_metadata` ; Kibana : Fleet *Read*, Security → *Rules and
+   Exceptions* *Read*), on lit ce que Kibana a généré (`GET _security/role/verificateur-siem` →
+   `feature_fleetv2.read`, `feature_securitySolutionRulesV4.read`), et on crée la clé avec
+   exactement ces droits :
+
+   ```
+   POST _security/api_key
+   {
+     "name": "verificateur-siem",
+     "expiration": "90d",
+     "role_descriptors": { "verificateur-siem": {
+       "cluster": ["monitor"],
+       "indices": [ { "names": ["logs-*"], "privileges": ["read", "view_index_metadata"] } ],
+       "applications": [ { "application": "kibana-.kibana",
+         "privileges": ["feature_fleetv2.read", "feature_securitySolutionRulesV4.read"],
+         "resources": ["space:default"] } ] } }
+   }
+   ```
+
+   La valeur `encoded` de la réponse va directement au gestionnaire de mots de passe (pas de
+   capture). Révocation : `DELETE _security/api_key { "ids": ["<id>"] }`.
+
+### Hors ligne
+
+Débrancher la carte NAT (VMware → Network Adapter 2 → décocher *Connected*), puis :
+
+```bash
+read -rsp "Clé d'API : " ES_API_KEY && echo && export ES_API_KEY
+~/verifier-siem.sh ; unset ES_API_KEY
+```
+
+Constat du 26/10 : isolement **OK (aucune route sortante)**, Elasticsearch 9.5.5, cluster
+**vert**, Kibana disponible, 1 agent en ligne (9.5.5), disque 30 %, 2 157 règles installées ;
+les quatre flux en alerte « vide » (aucune source branchée). Instantané
+**« siem-elastic installée hors ligne (phase 3) »**, VM éteinte.
 
 ## Phase 4 — La source poste : la VM Windows
 

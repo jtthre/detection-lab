@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 # verifier-siem.sh — l'état du SIEM avant de s'en servir.
 #
-# Usage : ES_API_KEY=<clé encodée> ./scripts/verifier-siem.sh
+# Usage :
+#   read -rsp "Clé d'API : " ES_API_KEY && echo && export ES_API_KEY
+#   ./verifier-siem.sh ; unset ES_API_KEY
 #
-# La clé d'API se crée dans Kibana (Gestion de la pile → Clés d'API), avec des droits de
-# LECTURE seulement, et se garde dans le gestionnaire de mots de passe. Elle ne s'écrit dans
-# aucun fichier : on la donne au script par une variable d'environnement, le temps d'une
-# commande (la ligne commence par une espace pour ne pas finir dans l'historique bash).
+# La clé d'API (« verificateur-siem », voir plan-de-test.md phase 3c) n'a que des droits de
+# LECTURE : cluster monitor, logs-* en lecture, Fleet et règles de détection en lecture.
+# Elle se garde dans le gestionnaire de mots de passe et ne s'écrit dans aucun fichier : `read -s`
+# la reçoit sans l'afficher ni la laisser dans l'historique, `unset` l'efface après usage.
 #
 # Variables facultatives :
 #   ES_URL  (https://192.168.234.20:9200)   KB_URL (http://192.168.234.20:5601)

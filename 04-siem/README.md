@@ -245,9 +245,11 @@ la VM siem : **au moins 60 Go libres** sur le disque qui l'accueille, obtenus en
 | **Le SIEM n'a pas d'accès Internet en service** | NAT seulement le temps d'installer les paquets, les intégrations et les règles Elastic (ils viennent du dépôt de paquets d'Elastic), puis réseau hôte uniquement. |
 | **Aucun secret dans le dépôt** | Mot de passe `elastic`, jetons d'inscription, clés d'API : dans le gestionnaire de mots de passe, jamais dans un fichier versionné, jamais collés dans une console partagée ou une capture d'écran. Les scripts lisent la clé dans une variable d'environnement. |
 | **Un compte par usage** | Le superutilisateur `elastic` sert à l'installation, puis on travaille avec un compte nominatif et des clés d'API à droits limités. |
-| **TLS gardé** | Elasticsearch 9 active TLS et l'authentification à l'installation. On ne les désactive pas « pour aller plus vite ». |
+| **TLS gardé** | Elasticsearch 9 active TLS et l'authentification à l'installation. On ne les désactive pas « pour aller plus vite ». Fleet Server a un certificat signé par une autorité propre au lab : aucun agent ne s'inscrit avec `--insecure`. |
+| **Rien n'écoute sur la carte NAT** | Elasticsearch et Kibana sont liés à `192.168.234.20` ; un pare-feu `ufw` refuse toute entrée sauf 22, 5601, 8220 et 9200 **sur la carte du lab**. Vérifié par `ss -ltnp` et `ufw status`. |
+| **Un secret exposé est un secret révoqué** | Le 16/10, un jeton de service Fleet est apparu sur une capture d'écran : il a été révoqué avant de recommencer. Depuis, les jetons et clés passent au terminal par `read -s`, sans affichage. |
 | **Le trafic normal reste privé** | Les journaux de la VM Windows dans le SIEM contiennent sa navigation : aucun export brut dans le dépôt, comme au module 03. |
-| **Les règles se testent avant d'alerter** | Une règle importée commence **désactivée** ; elle n'est activée qu'après rejeu et mesure du bruit. |
+| **Les règles se testent avant d'alerter** | Une règle importée commence **désactivée** ; elle n'est activée qu'après rejeu et mesure du bruit. Les 2 157 règles Elastic sont installées désactivées — Elastic en active deux d'office (*Endpoint Security*, *Container Workload Protection*), désactivées aussi : on part de zéro. |
 | **Pas de maliciel réel** | Les attaques rejouées sont celles d'Atomic Red Team (module 02) dans la VM isolée ; les données réseau viennent des pcaps du module 03, relus dans la sonde. |
 
 ---
