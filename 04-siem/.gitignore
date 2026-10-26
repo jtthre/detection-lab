@@ -8,6 +8,7 @@ elasticsearch.yml
 *.crt
 *.p12
 cle-api*.txt
+jeton*.txt
 
 # Données brutes : la VM Windows envoie sa navigation au SIEM, rien de brut ne sort.
 *.pcap
