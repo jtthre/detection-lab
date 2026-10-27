@@ -1,1 +1,1 @@
-process.parent.executable.caseless:*\\WmiPrvSE.exe
+process.parent.executable:*\\WmiPrvSE.exe

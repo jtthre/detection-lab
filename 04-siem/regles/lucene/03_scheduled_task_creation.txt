@@ -1,1 +1,1 @@
-((process.executable.caseless:*\\schtasks.exe OR process.pe.original_file_name:schtasks.exe) AND (process.command_line:(*\ \/create* OR *\ \-create*))) AND (NOT (user.name:(*AUTORITE\ NT\\Système* OR *AUTHORITY\\SYSTEM*)))
+((process.executable.caseless:*\\schtasks.exe OR process.pe.original_file_name:schtasks.exe) AND (process.command_line:(*\ \/create* OR *\ \-create*))) AND (NOT ((user.name:(*AUTORITE\ NT\\Système* OR *AUTHORITY\\SYSTEM*)) OR (user.name:(Système OR SYSTEM))))

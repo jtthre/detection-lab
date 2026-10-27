@@ -305,11 +305,18 @@ correspond à ce que l'agent écrit vraiment.
 ## Phase 5 — Porter les règles du module 01
 
 ```bash
-pip install --user sigma-cli pySigma-backend-elasticsearch pySigma-pipeline-windows
-./scripts/convertir-sigma.sh
+pip install sigma-cli pySigma-backend-elasticsearch
+./scripts/convertir-sigma.sh          # ATTACK_JSON=<enterprise-attack.json> si github.com est injoignable
 ```
 
-Le script convertit les dix règles et écrit un fichier par règle dans `regles/`. Pour chaque règle :
+La conversion applique `ecs_windows` **puis** `regles/pipeline-elastic-agent.yml`, qui corrige
+les écarts du relevé de la phase 4 (`Details` → `registry.data.strings`,
+`process.parent.executable.caseless` → `process.parent.executable`). La règle 03 passe en v2
+(exclusion de SYSTEM sous ses deux formes). On importe la version **EQL** (insensible à la
+casse) : `regles/sigma-elastic.ndjson`, dix règles **désactivées**, limitées à
+`logs-windows.sysmon_operational-*` (Security → Règles → Importer).
+
+Pour chaque règle :
 
 1. **Lire la requête produite** et la confronter au relevé de champs de la phase 4.
 2. **Importer désactivée** (Security → Règles → Importer, ou API).

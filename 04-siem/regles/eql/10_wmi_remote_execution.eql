@@ -1,1 +1,1 @@
-any where process.parent.executable.caseless:"*\\WmiPrvSE.exe"
+any where process.parent.executable:"*\\WmiPrvSE.exe"

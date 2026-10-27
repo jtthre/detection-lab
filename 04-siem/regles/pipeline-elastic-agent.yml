@@ -1,0 +1,29 @@
+# Corrections du pipeline ecs_windows pour Elastic Agent 9.5 + intégration Windows 3.11.
+#
+# ecs_windows (pySigma-backend-elasticsearch 2.1.1) a été écrit pour Winlogbeat. Le relevé de
+# champs du 26/10/2026 (preuves/releve-champs-windows.md) montre deux écarts qui rendaient des
+# règles MUETTES. On ne retouche pas les règles Sigma (elles décrivent Sysmon, pas Elastic) :
+# on corrige la traduction, ici, après ecs_windows (priorité 30 > 20).
+#
+# Usage : sigma convert -t eql -p ecs_windows -p regles/pipeline-elastic-agent.yml <règle>
+name: Elastic Agent 9.5 / Windows 3.11 — écarts à ecs_windows (relevé du 26/10/2026)
+priority: 30
+transformations:
+  # C8 : Sysmon 13, la valeur écrite (Details) n'est plus dans winlog.event_data,
+  # l'intégration la range dans registry.data.strings. Règles 04 et 08.
+  - id: sysmon13_details_vers_registry_data
+    type: field_name_mapping
+    mapping:
+      winlog.event_data.Details: registry.data.strings
+    rule_conditions:
+      - type: logsource
+        product: windows
+  # C3 : process.parent.executable n'a pas de sous-champ .caseless dans les données de
+  # l'agent. On vise le champ lui-même ; en EQL, like~ reste insensible à la casse. Règle 10.
+  - id: parent_executable_sans_caseless
+    type: field_name_mapping
+    mapping:
+      process.parent.executable.caseless: process.parent.executable
+    rule_conditions:
+      - type: logsource
+        product: windows

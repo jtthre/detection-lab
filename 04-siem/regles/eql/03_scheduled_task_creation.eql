@@ -1,1 +1,1 @@
-any where ((process.executable.caseless:"*\\schtasks.exe" or process.pe.original_file_name:"schtasks.exe") and (process.command_line like~ ("* /create*", "* -create*"))) and (not (user.name like~ ("*AUTORITE NT\\Système*", "*AUTHORITY\\SYSTEM*")))
+any where ((process.executable.caseless:"*\\schtasks.exe" or process.pe.original_file_name:"schtasks.exe") and (process.command_line like~ ("* /create*", "* -create*"))) and (not ((user.name like~ ("*AUTORITE NT\\Système*", "*AUTHORITY\\SYSTEM*")) or (user.name like~ ("Système", "SYSTEM"))))

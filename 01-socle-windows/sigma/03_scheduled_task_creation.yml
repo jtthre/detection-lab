@@ -11,6 +11,7 @@ references:
     - https://attack.mitre.org/techniques/T1053/005/
 author: Mamadou Lamine Thiore (Junior)
 date: 2026-09-14
+modified: 2026-10-27
 tags:
     - attack.persistence
     - attack.privilege-escalation
@@ -26,10 +27,19 @@ detection:
         CommandLine|contains:
             - ' /create'
             - ' -create'
+    # v2 (module 04) : Sysmon écrit le compte en un seul bloc (« AUTORITE NT\Système »),
+    # Elastic Agent le sépare en user.domain + user.name (« Système »). La v1 ne filtrait que
+    # la forme Sysmon : dans le SIEM, l'exclusion ne s'appliquait jamais. On garde les deux
+    # formes, en français et en anglais. Surtout pas de filtre sur user.id : dans les données
+    # de l'agent, il vaut S-1-5-18 sur TOUS les événements Sysmon (c'est le compte du service
+    # Sysmon, pas celui du processus) — voir 04-siem/preuves/releve-champs-windows.md.
     filter_system_account:
-        User|contains:
+        - User|contains:
             - 'AUTORITE NT\Système'
             - 'AUTHORITY\SYSTEM'
+        - User:
+            - 'Système'
+            - 'SYSTEM'
     condition: all of selection_* and not filter_system_account
 falsepositives:
     - Scripts d'installation logicielle créant leurs propres tâches de mise à jour.
